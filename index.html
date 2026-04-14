@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>IdeaForge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#060608;--s1:#0e0e14;--s2:#16161e;--s3:#1e1e28;--s4:#2a2a36;--tx:#f0eef5;--t2:#a8a4b8;--t3:#6b6680;--ac:#7c5cfc;--ac2:#9b80ff;--gn:#22c55e;--am:#f59e0b;--rd:#ef4444;--pk:#ec4899;--r:16px;--r2:12px;--r3:8px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100dvh}
+.app{max-width:500px;margin:0 auto;padding:0 14px 100px}
+.hdr{padding:18px 0 8px;display:flex;align-items:center;gap:8px}
+.hdr h1{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--ac),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-r{font-size:11px;color:var(--t3);margin-left:auto}
+
+/* Nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(14,14,20,.95);backdrop-filter:blur(16px);border-top:1px solid var(--s3);display:flex;justify-content:center;z-index:100;padding:6px 0 env(safe-area-inset-bottom,8px)}
+.nav-i{display:flex;max-width:500px;width:100%}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border:none;background:transparent;color:var(--t3);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit}
+.nav .on{color:var(--ac2)}
+.nav .ic{font-size:22px}
+.fab{position:fixed;bottom:72px;right:14px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--pk));border:none;color:#fff;font-size:24px;cursor:pointer;z-index:101;box-shadow:0 4px 16px rgba(124,92,252,.4)}
+
+/* Card */
+.cd{background:var(--s2);border-radius:var(--r);padding:14px;margin-bottom:8px;border:1.5px solid var(--s3);cursor:pointer;position:relative;overflow:hidden}
+.cd.sel{border-color:var(--ac)}
+.cd-top{display:flex;gap:11px;align-items:flex-start}
+.cd-info{flex:1;min-width:0}
+.cd-h{font-size:14px;font-weight:700;margin-bottom:3px}
+.cd-d{font-size:12px;color:var(--t2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tgs{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.tg{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;border:1px solid}
+.prog{display:flex;gap:2px;margin-top:6px}
+.prog-s{flex:1;height:3px;border-radius:2px;background:var(--s4)}
+.prog-s.done{background:var(--gn)}
+
+/* Ring */
+.rn{width:44px;height:44px;flex-shrink:0;position:relative}
+.rn svg{width:100%;height:100%;transform:rotate(-90deg)}
+.rn-v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+
+/* Expanded */
+.exp{background:var(--s1);border-radius:0 0 var(--r) var(--r);margin-top:-6px;margin-bottom:8px;padding:12px;border:1.5px solid var(--s3);border-top:none}
+.exp-r{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.exp button{padding:7px 11px;border:none;border-radius:var(--r3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.b1{background:var(--ac);color:#fff}
+.b2{background:rgba(124,92,252,.12);color:var(--ac2);border:1px solid rgba(124,92,252,.25)!important}
+.b3{background:rgba(34,197,94,.12);color:var(--gn);border:1px solid rgba(34,197,94,.25)!important}
+.b4{background:rgba(245,158,11,.12);color:var(--am);border:1px solid rgba(245,158,11,.25)!important}
+.ai{background:rgba(124,92,252,.05);border:1px solid rgba(124,92,252,.15);border-radius:var(--r3);padding:10px;margin-top:6px;cursor:pointer}
+.ai h4{font-size:11px;font-weight:700;color:var(--ac2);margin-bottom:3px}
+.ai p{font-size:11px;color:var(--t2);line-height:1.4;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Form */
+.fc{background:var(--s2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--s3)}
+.fc.hi{border-color:var(--ac)}
+.fl{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;display:block}
+.fw{display:flex;gap:6px;align-items:flex-start}
+.fi,.fx{flex:1;width:100%;padding:10px 12px;background:var(--s1);border:1px solid var(--s3);border-radius:var(--r3);color:var(--tx);font-size:14px;font-family:inherit;outline:none}
+.ft{flex:1;width:100%;padding:10px 12px;background:var(--s1);border:1px solid var(--s3);border-radius:var(--r3);color:var(--tx);font-size:14px;font-family:inherit;outline:none;min-height:80px;resize:vertical}
+.fi:focus,.ft:focus{border-color:var(--ac)}
+.fx{appearance:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.fbtns button{flex:1;padding:13px;border:none;border-radius:var(--r2);font-weight:700;font-size:14px;cursor:pointer;min-width:80px;font-family:inherit}
+.btn-ac{background:linear-gradient(135deg,var(--ac),var(--pk));color:#fff}
+.btn-s{background:var(--s3);color:var(--t2)}
+.btn-rd{background:rgba(239,68,68,.12);color:var(--rd)}
+.mic{width:36px;height:36px;border-radius:50%;border:none;background:var(--s3);color:var(--t3);font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.mic.on{background:var(--rd);color:#fff;animation:pmic 1s infinite}
+@keyframes pmic{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+/* Stars */
+.st{display:flex;gap:2px}.st span{font-size:20px;cursor:pointer;user-select:none}
+.s1{color:var(--am)}.s0{color:var(--s4)}
+.scr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--s3)}
+
+/* Dashboard */
+.dg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.dc{background:var(--s2);border-radius:var(--r);padding:14px;border:1px solid var(--s3)}
+.dn{font-size:26px;font-weight:800}.dl{font-size:10px;color:var(--t3);font-weight:600;margin-top:2px}
+.sec{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:flex;flex-direction:column;padding:14px}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.modal-h span{font-size:14px;font-weight:700;color:var(--tx)}
+.modal-x{background:var(--rd);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12px;cursor:pointer}
+.modal-b{flex:1;overflow-y:auto;padding:14px;background:var(--s2);border:1px solid var(--s3);border-radius:var(--r);color:var(--t2);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.modal-f{display:flex;gap:8px;margin-top:8px}
+.modal-f button{flex:1;padding:13px;border:none;border-radius:var(--r2);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+
+/* Misc */
+.back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--s2);border:1px solid var(--s3);border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;margin:12px 0;font-family:inherit;color:var(--tx)}
+.sb{display:flex;gap:6px;margin-bottom:10px}
+.sb input{flex:1;padding:8px 10px;background:var(--s2);border:1px solid var(--s3);border-radius:var(--r3);color:var(--tx);font-size:12px;outline:none;font-family:inherit}
+.sb select{padding:7px;background:var(--s2);border:1px solid var(--s3);border-radius:var(--r3);color:var(--t3);font-size:11px;outline:none;font-family:inherit}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:999;animation:ti 2.5s forwards;background:var(--gn);color:#fff;font-family:inherit}
+@keyframes ti{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}10%,70%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+.empty{text-align:center;padding:40px 20px;color:var(--t3)}.empty-i{font-size:48px;margin-bottom:10px}
+.imp-ta{width:100%;min-height:120px;padding:12px;background:var(--s1);border:2px dashed var(--s4);border-radius:var(--r);color:var(--tx);font-size:13px;font-family:inherit;outline:none;resize:vertical}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+var CATS=[{id:"consumer",l:"Grand public",ic:"👥",c:"#22c55e"},{id:"entertainment",l:"Divertissement",ic:"🎵",c:"#ec4899"},{id:"ai-tool",l:"Outil IA",ic:"🤖",c:"#8b5cf6"},{id:"saas",l:"SaaS",ic:"💼",c:"#3b82f6"},{id:"proptech",l:"PropTech",ic:"🏗",c:"#f97316"},{id:"other",l:"Autre",ic:"💡",c:"#6b7280"}];
+var CRIT=[{id:"innovation",l:"Innovation",d:"Originalite"},{id:"market",l:"Marche",d:"Taille marche"},{id:"feasibility",l:"Faisabilite",d:"Complexite"},{id:"revenue",l:"Monetisation",d:"Revenus"},{id:"impact",l:"Impact",d:"Valeur user"}];
+var STAT={draft:{l:"Brouillon",c:"#6b7280"},evaluated:{l:"Evaluee",c:"#f59e0b"},"in-progress":{l:"En dev",c:"#8b5cf6"},launched:{l:"Lancee",c:"#22c55e"}};
+var PRIO={1:"Urgente",2:"Haute",3:"Moyenne",4:"Basse"};
+var STEPS=["aiAnalysis","aiBusinessPlan","aiDevSpec","aiPrototype","aiTests"];
+var STEP_LABELS={"aiAnalysis":"Analyse","aiBusinessPlan":"Business Plan","aiDevSpec":"Specs","aiPrototype":"Prototype","aiTests":"Tests"};
+
+var S={ideas:[],view:"list",sel:null,editId:null,sort:"score",search:""};
+var SK="ideaforge-v6";
+function load(){try{var d=localStorage.getItem(SK);return d?JSON.parse(d):null}catch(e){return null}}
+function save(){try{localStorage.setItem(SK,JSON.stringify({ideas:S.ideas}))}catch(e){}}
+
+function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function sco(s){if(!s)return 0;var v=CRIT.map(function(c){return s[c.id]||0});return Math.round(v.reduce(function(a,b){return a+b},0)/(CRIT.length*5)*100)}
+function maturity(idea){var steps=0;STEPS.forEach(function(k){if(idea[k])steps++});var iters=Math.min(idea.iterations||0,5);return steps*2+iters}
+function fullScore(idea){return Math.min(100,sco(idea.scores)+maturity(idea))}
+function gc(s){return s>=90?"#00E676":s>=75?"#22c55e":s>=50?"#f59e0b":s>=25?"#fb923c":"#ef4444"}
+function ring(s,mat){
+  var c=gc(s);
+  var h='<div class="rn"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="'+c+'" stroke-width="3" stroke-dasharray="'+s*.975+' 100" stroke-linecap="round"/></svg><div class="rn-v" style="color:'+c+'">'+s+'</div></div>';
+  return h;
+}
+function tag(t,c){return'<span class="tg" style="color:'+c+';border-color:'+c+'33">'+t+'</span>'}
+function devProg(idea){var n=0;STEPS.forEach(function(k){if(idea[k])n++});return n}
+function toast(m){var e=document.createElement("div");e.className="toast";e.textContent=m;document.body.appendChild(e);setTimeout(function(){e.remove()},2600)}
+function stars(cid,v){var h='<div class="st">';for(var i=1;i<=5;i++)h+='<span class="'+(i<=v?"s1":"s0")+'" data-c="'+cid+'" data-v="'+i+'">&#9733;</span>';return h+"</div>"}
+
+// Speech
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var aR=null,aT=null;
+function mic(fid){
+  if(!SR){toast("Dictee non supportee");return}
+  if(aR&&aT===fid){aR.stop();return}
+  if(aR)aR.stop();
+  var r=new SR();r.lang="fr-FR";r.interimResults=true;r.continuous=true;
+  aR=r;aT=fid;
+  var f=document.getElementById(fid),b=document.getElementById("m-"+fid);if(!f)return;
+  var base=f.value;if(b)b.classList.add("on");
+  r.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;f.value=base+(base?" ":"")+t};
+  r.onend=function(){if(b)b.classList.remove("on");aR=null;aT=null};
+  r.onerror=function(){if(b)b.classList.remove("on");aR=null;aT=null};
+  r.start();
+}
+function stopMic(){if(aR){aR.stop();aR=null;aT=null}}
+
+// Modal - uses textarea for guaranteed mobile copy
+function showModal(title,content,copyable){
+  closeModal();
+  var el=document.createElement("div");el.className="modal";el.id="modal";
+  var h='<div class="modal-h"><span>'+title+'</span><button class="modal-x" onclick="closeModal()">X</button></div>';
+  if(copyable){
+    // TEXTAREA = seul moyen fiable de copier sur Android local
+    h+='<textarea id="mc" readonly style="flex:1;width:100%;padding:14px;background:var(--s2);border:2px solid var(--ac);border-radius:12px;color:var(--t2);font-size:14px;font-family:inherit;line-height:1.6;resize:none;outline:none;white-space:pre-wrap;-webkit-user-select:text;user-select:text">'+esc(content)+'</textarea>';
+    h+='<div class="modal-f"><button style="background:linear-gradient(135deg,var(--ac),var(--pk));color:#fff;flex:1;font-size:16px;padding:16px" onclick="doMobileCopy()">COPIER LE TEXTE</button></div>';
+    h+='<div class="modal-f"><button style="background:var(--s3);color:var(--t2);flex:1" onclick="closeModal()">Fermer</button></div>';
+  } else {
+    h+='<div class="modal-b" id="mc">'+esc(content)+'</div>';
+    h+='<div class="modal-f"><button style="background:var(--s3);color:var(--t2);flex:1" onclick="closeModal()">Fermer</button></div>';
+  }
+  el.innerHTML=h;
+  document.body.appendChild(el);
+}
+function closeModal(){var m=document.getElementById("modal");if(m)m.remove()}
+function doMobileCopy(){
+  var ta=document.getElementById("mc");
+  if(!ta)return;
+  var text=ta.value||ta.textContent||"";
+  
+  // Methode 1: Clipboard API (marche en HTTPS)
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(function(){toast("Copie OK !")}).catch(function(){methode2(text)});
+    return;
+  }
+  methode2(text);
+}
+function methode2(text){
+  // Methode 2: textarea temporaire plein ecran + execCommand
+  var ta2=document.createElement("textarea");
+  ta2.value=text;
+  ta2.style.cssText="position:fixed;top:0;left:0;width:100vw;height:50vh;z-index:9999;font-size:16px;padding:20px;background:#1a1a2e;color:#fff;border:3px solid #7c5cfc;opacity:1";
+  document.body.appendChild(ta2);
+  ta2.focus();
+  ta2.setSelectionRange(0,999999);
+  
+  var ok=false;
+  try{ok=document.execCommand("copy")}catch(e){}
+  
+  if(ok){
+    document.body.removeChild(ta2);
+    toast("Copie OK !");
+  } else {
+    // Methode 3: on laisse le textarea visible pour que l user copie manuellement
+    ta2.style.height="80vh";
+    toast("Texte selectionne - appuie Copier dans le menu Android");
+    // Bouton pour fermer
+    var btn=document.createElement("button");
+    btn.textContent="FERMER";
+    btn.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:16px 40px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700";
+    btn.onclick=function(){document.body.removeChild(ta2);document.body.removeChild(btn)};
+    document.body.appendChild(btn);
+  }
+}
+function showAI(id,k){var i=getI(id);if(!i||!i[k])return;var labels=Object.assign({},STEP_LABELS,{aiImprove:"Ameliorations"});showModal((labels[k]||k)+" - "+i.title,i[k],false)}
+
+// Prompts
+function pFor(k,i){
+  var ctx="Titre: "+i.title+"\nDescription: "+(i.description||"?")+"\nCible: "+(i.targetUsers||"?")+"\nModele eco: "+(i.businessModel||"?")+"\nConcurrents: "+(i.competitors||"?")+"\nNotes: "+(i.notes||"-");
+  if(i.aiAnalysis)ctx+="\n\n--- ANALYSE ---\n"+i.aiAnalysis.slice(0,600);
+  if(i.aiBusinessPlan)ctx+="\n\n--- BUSINESS PLAN ---\n"+i.aiBusinessPlan.slice(0,600);
+  if(i.aiDevSpec)ctx+="\n\n--- SPECS ---\n"+i.aiDevSpec.slice(0,600);
+  if(i.aiPrototype)ctx+="\n\n--- PROTOTYPE ---\n"+i.aiPrototype.slice(0,400);
+  if(i.aiImprove)ctx+="\n\n--- AMELIORATIONS ---\n"+i.aiImprove.slice(0,400);
+  var fnames={};
+  var prompts={
+    aiAnalysis:"ANALYSE cette idee. Donne: 1) Reformulation 2) Scores /5 3) Forces/faiblesses 4) 3 ameliorations 5) Concurrents\n\n"+ctx+"\n\nInjecte dans IdeaForge.",
+    aiBusinessPlan:"BUSINESS PLAN. Donne: 1) Proposition valeur 2) Marche 3) Pricing 4) Go-to-market 5) MVP 6) Risques 7) KPIs 8) Finances\n\n"+ctx+"\n\nInjecte dans IdeaForge.",
+    aiDevSpec:"CAHIER DES CHARGES MVP. 1) Architecture 2) Must/Should/Could 3) Modele donnees 4) APIs 5) Wireframe 6) Sprints 7) Estimation 8) Vigilance\n\n"+ctx+"\n\nInjecte dans IdeaForge ET commence le dev.",
+    aiPrototype:"DEVELOPPE LE PROTOTYPE. Cree un fichier HTML mono-fichier fonctionnel avec le MVP.\n\n"+ctx+"\n\nCree le prototype complet.",
+    aiTests:"TESTE cette application en profondeur. Le fichier prototype est: "+(fnames[i.id]||"prototype.html")+"\n\nFais un audit complet:\n\n1) TESTS FONCTIONNELS (8-10 scenarios)\n   - Teste chaque bouton, chaque navigation, chaque formulaire\n   - Simule le parcours utilisateur complet du debut a la fin\n   - Verifie que tous les etats marchent (vide, rempli, erreur)\n\n2) BUGS ET ERREURS\n   - Lis le code HTML/JS du prototype et identifie les bugs\n   - Verifie la syntaxe JS, les fonctions manquantes, les variables non definies\n   - Teste les cas limites (texte tres long, caracteres speciaux, champs vides)\n\n3) UX MOBILE\n   - L app s ouvre-t-elle correctement sur mobile Android ?\n   - Les boutons sont-ils assez gros pour les doigts (min 44px) ?\n   - Le scroll est-il fluide ? Les modals se ferment-elles ?\n   - Le texte est-il lisible sans zoomer ?\n\n4) PERFORMANCE\n   - Taille du fichier, temps de chargement estime\n   - Fuites memoire potentielles, listeners non nettoyes\n   - localStorage : taille des donnees, risque de depassement\n\n5) ACCESSIBILITE\n   - Contraste des couleurs (WCAG AA)\n   - Navigation clavier possible ?\n   - Textes alternatifs, labels de formulaires\n\n6) SECURITE\n   - XSS potentiel (injection HTML dans les champs)\n   - Donnees sensibles en localStorage non chiffrees\n   - Validations manquantes\n\n7) VERDICT\n   - Note /10\n   - Top 3 bugs critiques a corriger EN PREMIER\n   - Top 3 ameliorations UX rapides (<1h chacune)\n   - L app est-elle PRETE pour des vrais utilisateurs ? OUI/NON + pourquoi\n\n"+ctx+"\n\nOuvre le fichier prototype, analyse le code, et donne un rapport detaille. Corrige les bugs critiques directement. Injecte les resultats dans IdeaForge."
+  };
+  return prompts[k]||"";
+}
+
+// Render
+function render(){
+  stopMic();var a=document.getElementById("app"),h="";
+  h+='<div class="hdr"><h1>IdeaForge</h1><span class="hdr-r">'+S.ideas.length+" apps</span></div>";
+  if(S.view==="list")h+=rList();
+  else if(S.view==="dash")h+=rDash();
+  else if(S.view==="form")h+=rForm();
+  else if(S.view==="import")h+=rImport();
+  if(S.view!=="form"){
+    h+='<div class="nav"><div class="nav-i">';
+    h+=nb("list","📱","Apps")+nb("dash","📊","Stats")+nb("import","📥","Import");
+    h+='</div></div><div class="fab" onclick="newIdea()">+</div>';
+  }
+  a.innerHTML=h;bindStars();
+}
+function nb(v,i,l){return'<button class="'+(S.view===v?"on":"")+'" onclick="go(\''+v+'\')"><span class="ic">'+i+"</span>"+l+"</button>"}
+
+function rList(){
+  var ideas=S.ideas.slice();
+  if(S.search){var q=S.search.toLowerCase();ideas=ideas.filter(function(i){return(i.title||"").toLowerCase().indexOf(q)>=0||(i.description||"").toLowerCase().indexOf(q)>=0})}
+  if(S.sort==="score")ideas.sort(function(a,b){return fullScore(b)-fullScore(a)});
+  else if(S.sort==="date")ideas.sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)});
+  var h='<div class="sb"><input placeholder="Rechercher..." value="'+esc(S.search)+'" oninput="S.search=this.value;render()"><select onchange="S.sort=this.value;render()"><option value="score"'+(S.sort==="score"?" selected":"")+'>Score</option><option value="date"'+(S.sort==="date"?" selected":"")+">Recent</option></select></div>";
+  if(!ideas.length)return h+'<div class="empty"><div class="empty-i">💡</div><div style="font-size:15px;font-weight:700">Aucune idee</div></div>';
+  ideas.forEach(function(idea){
+    var base=sco(idea.scores),mat=maturity(idea),fs=fullScore(idea),cat=CATS.find(function(c){return c.id===idea.category}),sel=S.sel===idea.id,dp=devProg(idea);
+    h+='<div class="cd'+(sel?" sel":"")+'" onclick="toggleSel(\''+idea.id+'\')">';
+    h+='<div class="cd-top"><div>'+ring(fs)+'<div style="font-size:8px;color:var(--t3);text-align:center;margin-top:2px">'+base+(mat>0?'<span style="color:var(--gn)">+'+mat+'</span>':"")+'</div></div><div class="cd-info">';
+    h+='<div class="cd-h">'+esc(idea.title)+"</div>";
+    h+='<div class="cd-d">'+esc(idea.description||"")+"</div>";
+    h+='<div class="tgs">';
+    if(cat)h+=tag(cat.ic+" "+cat.l,cat.c);
+    h+=tag((STAT[idea.status]||STAT.draft).l,(STAT[idea.status]||STAT.draft).c);
+    h+="</div>";
+    if(dp>0){h+='<div class="prog">';STEPS.forEach(function(k){h+='<div class="prog-s'+(idea[k]?" done":"")+'"></div>'});h+="</div>"}
+    // ALWAYS show next step recommendation on every card
+    var ns=nextStep(idea);
+    h+='<div style="display:flex;gap:6px;margin-top:6px">';
+    // Launch button if prototype exists
+    if(idea.protoUrl)h+='<div style="padding:6px 10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:700;color:var(--gn)" onclick="ev(event);launchApp(\''+idea.id+'\')"><span style="font-size:14px">🚀</span>Lancer</div>';
+    // Next step
+    h+='<div style="flex:1;padding:6px 10px;background:rgba(124,92,252,.08);border-radius:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="ev(event);'+ns.action+'"><span style="font-size:14px">'+ns.icon+'</span><span style="color:'+ns.color+';font-weight:700">'+ns.label+'</span><span style="color:var(--t3);margin-left:auto;font-size:10px">→</span></div>';
+    h+='</div>';
+    h+="</div></div></div>";
+    if(sel){
+      h+='<div class="exp">';
+      // Launch app button - BIG and prominent if prototype exists
+      if(idea.protoUrl)h+='<div style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,#22c55e,#059669);border-radius:10px;cursor:pointer;text-align:center" onclick="ev(event);launchApp(\''+idea.id+'\')"><div style="font-size:15px;font-weight:900;color:#fff">🚀 LANCER L\'APP</div><div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">Ouvrir le prototype</div></div>';
+      // Next step banner
+      h+='<div style="padding:12px;margin-bottom:10px;background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(236,72,153,.08));border:1px solid rgba(124,92,252,.3);border-radius:10px;cursor:pointer;text-align:center" onclick="ev(event);'+ns.action+'">';
+      h+='<div style="font-size:13px;font-weight:800;color:var(--ac2)">'+ns.icon+' PROCHAINE ETAPE : '+ns.label+'</div>';
+      h+='<div style="font-size:10px;color:var(--t3);margin-top:2px">Clique pour generer le prompt</div></div>';
+      // Step buttons
+      h+='<div class="exp-r">';
+      h+='<button class="b1" onclick="ev(event);editIdea(\''+idea.id+'\')">Editer</button>';
+      STEPS.forEach(function(k){
+        if(idea[k])h+='<button class="b3" onclick="ev(event);showAI(\''+idea.id+"','"+k+"')\">"+STEP_LABELS[k]+' &#10003;</button>';
+        else h+='<button class="b2" onclick="ev(event);showModal(\''+STEP_LABELS[k]+'\',pFor(\''+k+"',getI('"+idea.id+"')),true)\">"+STEP_LABELS[k]+"</button>";
+      });
+      // Ameliorer button ALWAYS visible with iteration count
+      var iterCount=idea.iterations||0;
+      h+='<button class="b4" onclick="ev(event);showModal(\'Ameliorer v'+(iterCount+1)+'\',pAmeliorer(getI(\''+idea.id+"')),true)\">Ameliorer"+(iterCount>0?" (x"+iterCount+")":"")+"</button>";
+      h+="</div>";
+      // Show existing content
+      STEPS.forEach(function(k){
+        if(idea[k])h+='<div class="ai" onclick="ev(event);showAI(\''+idea.id+"','"+k+"')\"><h4>"+STEP_LABELS[k]+'</h4><p>'+esc(idea[k]).slice(0,200)+"...</p></div>";
+      });
+      // Show improvement history if exists
+      if(idea.aiImprove)h+='<div class="ai" onclick="ev(event);showAI(\''+idea.id+"','aiImprove')\"><h4>Ameliorations (x"+iterCount+")</h4><p>"+esc(idea.aiImprove).slice(0,200)+"...</p></div>";
+      h+="</div>";
+    }
+  });
+  return h;
+}
+
+function rDash(){
+  var ideas=S.ideas,n=ideas.length;
+  var ev=ideas.filter(function(i){return sco(i.scores)>0}).length;
+  var avg=n?Math.round(ideas.reduce(function(a,i){return a+fullScore(i)},0)/n):0;
+  var top=ideas.slice().sort(function(a,b){return fullScore(b)-fullScore(a)}).slice(0,5);
+  var h='<div class="dg">';
+  h+='<div class="dc"><div class="dn" style="color:var(--ac2)">'+n+'</div><div class="dl">Total</div></div>';
+  h+='<div class="dc"><div class="dn" style="color:var(--gn)">'+ev+'</div><div class="dl">Evaluees</div></div>';
+  h+='<div class="dc"><div class="dn" style="color:var(--am)">'+avg+'</div><div class="dl">Score moyen</div></div>';
+  h+='<div class="dc"><div class="dn" style="color:var(--ac2)">'+ideas.reduce(function(a,i){return a+devProg(i)},0)+'</div><div class="dl">Etapes</div></div></div>';
+  if(top.length){h+='<div class="sec">Classement</div>';
+    top.forEach(function(i,idx){
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r2);margin-bottom:4px;border:1px solid var(--s3)"><span style="font-size:16px;width:22px;text-align:center">'+["🥇","🥈","🥉","4.","5."][idx]+"</span><span style=\"flex:1;font-size:13px;font-weight:600\">"+esc(i.title)+"</span>"+ring(fullScore(i))+"</div>";
+    });
+  }
+  return h;
+}
+
+function rForm(){
+  var idea=S.editId?getI(S.editId):null;
+  var o=idea?JSON.parse(JSON.stringify(idea)):{id:gid(),createdAt:new Date().toISOString(),status:"draft",priority:3,scores:{},category:"other"};
+  if(window._fs)for(var k in window._fs)o.scores[k]=window._fs[k];
+  window._fi=o;var s=sco(o.scores);
+  function f(l,k,ta,ph){var v=esc(o[k]||"");var fid="f-"+k;
+    var h='<div class="fc"><label class="fl">'+l+'</label><div class="fw">';
+    if(ta)h+='<textarea class="ft" id="'+fid+'" data-k="'+k+'" placeholder="'+(ph||"")+'">'+v+"</textarea>";
+    else h+='<input class="fi" id="'+fid+'" data-k="'+k+'" value="'+v+'" placeholder="'+(ph||"")+'">';
+    h+='<button class="mic" id="m-'+fid+'" onclick="event.preventDefault();mic(\''+fid+'\')" type="button">🎙</button></div></div>';return h;
+  }
+  var h='<button class="back" onclick="go(\'list\')">&#8592; Retour</button>';
+  h+=f("Nom","title",0,"Ex: DJ Crowd Connect");
+  h+=f("Description","description",1,"Le probleme, la solution...");
+  h+='<button onclick="enrichIdea()" style="width:100%;padding:12px;margin:-4px 0 12px;background:linear-gradient(135deg,var(--ac),var(--pk));color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">Ameliorer avec Claude</button>';
+  h+='<div class="fr"><div class="fc"><label class="fl">Categorie</label><select class="fx" data-k="category">';
+  CATS.forEach(function(c){h+='<option value="'+c.id+'"'+(o.category===c.id?" selected":"")+">"+c.ic+" "+c.l+"</option>"});
+  h+='</select></div><div class="fc"><label class="fl">Priorite</label><select class="fx" data-k="priority">';
+  for(var p in PRIO)h+='<option value="'+p+'"'+(String(o.priority)===p?" selected":"")+">"+PRIO[p]+"</option>";
+  h+="</select></div></div>";
+  h+='<div class="fc hi"><label class="fl" style="color:var(--ac2)">Score '+s+'/100</label>';
+  CRIT.forEach(function(c){h+='<div class="scr"><div><div style="font-size:12px;font-weight:600">'+c.l+'</div><div style="font-size:10px;color:var(--t3)">'+c.d+"</div></div>"+stars(c.id,o.scores[c.id]||0)+"</div>"});
+  h+="</div>";
+  h+=f("Cible","targetUsers",0,"Qui utilise ?");
+  h+=f("Modele eco","businessModel",1,"Freemium, SaaS...");
+  h+=f("Concurrents","competitors",1,"Solutions existantes...");
+  h+=f("Estimation MVP","mvpEstimate",0,"2 semaines...");
+  h+=f("Source","source",0,"Qui a suggere ?");
+  h+=f("Notes","notes",1,"Reflexions...");
+  h+='<div class="fbtns"><button class="btn-ac" onclick="saveForm()">Sauvegarder</button><button class="btn-s" onclick="go(\'list\')">Annuler</button>';
+  if(idea)h+='<button class="btn-rd" onclick="delIdea()">Suppr</button>';
+  h+="</div>";return h;
+}
+
+function rImport(){
+  var h='<div class="fc hi"><div class="fl" style="color:var(--am)">Importer une analyse</div>';
+  h+='<div class="fl">App</div><select class="fx" id="imp-i" style="margin-bottom:8px"><option value="">-- Choisir --</option>';
+  S.ideas.forEach(function(i){h+='<option value="'+i.id+'">'+esc(i.title)+"</option>"});
+  h+='</select><div class="fl">Type</div><select class="fx" id="imp-t" style="margin-bottom:8px">';
+  STEPS.forEach(function(k){h+='<option value="'+k+'">'+STEP_LABELS[k]+"</option>"});
+  h+='<option value="aiImprove">Ameliorations</option>';
+  h+='</select><div class="fl">Reponse Claude</div><textarea class="imp-ta" id="imp-text" placeholder="Colle ici..."></textarea>';
+  h+='<button onclick="doImport()" style="width:100%;padding:13px;background:var(--am);color:#000;border:none;border-radius:var(--r2);font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">Enregistrer</button></div>';
+  return h;
+}
+
+// Actions
+function ev(e){if(e)e.stopPropagation()}
+function go(v){S.view=v;S.sel=null;window._fs=null;stopMic();scrollTo(0,0);render()}
+
+function launchApp(id){
+  var idea=getI(id);if(!idea){toast("Pas de prototype");return}
+  var b64=PROTOS[id];
+  if(!b64){toast("Prototype non embarque");return}
+  closeModal();
+  var raw=atob(b64);
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+  var blob=new Blob([bytes],{type:"text/html;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var el=document.createElement("div");
+  el.id="app-runner";
+  el.style.cssText="position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column";
+  el.innerHTML='<div style="display:flex;align-items:center;padding:6px 10px;background:#111;border-bottom:1px solid #333;flex-shrink:0">'
+    +'<button onclick="closeRunner()" style="padding:8px 16px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">← Retour</button>'
+    +'<span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:#fff">'+idea.title+'</span></div>'
+    +'<iframe id="proto-frame" style="flex:1;border:none;width:100%"></iframe>';
+  document.body.appendChild(el);
+  document.getElementById("proto-frame").src=url;
+}
+function closeRunner(){var f=document.getElementById("proto-frame");if(f&&f.src)try{URL.revokeObjectURL(f.src)}catch(e){};var r=document.getElementById("app-runner");if(r)r.remove()}
+function toggleSel(id){S.sel=S.sel===id?null:id;render()}
+function getI(id){return S.ideas.find(function(i){return i.id===id})}
+function newIdea(){S.editId=null;window._fs=null;S.view="form";render()}
+function editIdea(id){S.editId=id;window._fs=null;S.view="form";render()}
+function saveForm(){
+  stopMic();var els=document.querySelectorAll("[data-k]");
+  var existing=S.editId?getI(S.editId):null;
+  var idea=existing?JSON.parse(JSON.stringify(existing)):{id:gid(),createdAt:new Date().toISOString(),scores:{}};
+  if(window._fs)for(var k in window._fs)idea.scores[k]=window._fs[k];
+  els.forEach(function(el){var k=el.dataset.k;if(k==="priority")idea[k]=parseInt(el.value);else idea[k]=el.value});
+  idea.updatedAt=new Date().toISOString();
+  if(idea.status==="draft"&&Object.values(idea.scores||{}).some(function(v){return v>0}))idea.status="evaluated";
+  if(existing)S.ideas=S.ideas.map(function(i){return i.id===idea.id?idea:i});
+  else S.ideas.push(idea);
+  window._fs=null;save();S.view="list";S.sel=idea.id;toast("Sauvegarde");render();
+}
+function delIdea(){if(!confirm("Supprimer ?"))return;S.ideas=S.ideas.filter(function(i){return i.id!==S.editId});save();S.view="list";render()}
+function doImport(){
+  var id=document.getElementById("imp-i").value;
+  var type=document.getElementById("imp-t").value;
+  var text=document.getElementById("imp-text").value.trim();
+  if(!id||!text){toast("Choisis une app et colle le texte");return}
+  var idea=getI(id);if(!idea)return;
+  idea[type]=text;idea.updatedAt=new Date().toISOString();
+  save();toast("Importe !");render();
+}
+function enrichIdea(){
+  var t=(document.getElementById("f-title")||{}).value||"";
+  var d=(document.getElementById("f-description")||{}).value||"";
+  if(!t&&!d){toast("Ecris un titre ou description");return}
+  showModal("Ameliorer",
+    "ENRICHIS cette idee. Donne: 1) Titre ameliore 2) Description enrichie (3-5 phrases) 3) Cible 4) Modele eco 5) Concurrents 6) 3 fonctionnalites cles 7) 3 noms alternatifs\n\nTitre: "+t+"\nDescription: "+d+"\n\nInjecte dans IdeaForge.",true);
+}
+function pAmeliorer(i){
+  if(!i)return"";
+  // Increment iteration counter
+  if(!i.iterations)i.iterations=0;
+  i.iterations++;save();
+  
+  var iter=i.iterations;
+  var done=[];var todo=[];
+  STEPS.forEach(function(k){if(i[k])done.push(STEP_LABELS[k]);else todo.push(STEP_LABELS[k])});
+  
+  // Build cumulative context
+  var ctx="Titre: "+i.title+"\nDescription: "+(i.description||"?")+"\nScore: "+sco(i.scores)+"/100\nIteration amelioration #"+iter;
+  ctx+="\n\nDEJA FAIT: "+done.join(", ")+(done.length?"":" (rien encore)");
+  ctx+="\nRESTE A FAIRE: "+todo.join(", ")+(todo.length?"":" (tout fait!)");
+  if(i.aiAnalysis)ctx+="\n\nANALYSE:\n"+i.aiAnalysis.slice(0,500);
+  if(i.aiBusinessPlan)ctx+="\n\nBP:\n"+i.aiBusinessPlan.slice(0,500);
+  if(i.aiDevSpec)ctx+="\n\nSPECS:\n"+i.aiDevSpec.slice(0,500);
+  if(i.aiPrototype)ctx+="\n\nPROTOTYPE:\n"+i.aiPrototype.slice(0,300);
+  if(i.aiImprove)ctx+="\n\nAMELIORATIONS PRECEDENTES:\n"+i.aiImprove.slice(0,500);
+  
+  // Progressive prompts based on iteration and state
+  var prompts=[
+    // Iteration 1-2: foundational improvements
+    "AMELIORE cette app (iteration #"+iter+"). Tu connais TOUT le contexte ci-dessous. Propose des choses NOUVELLES que tu n'as pas encore suggerees:\n\n1) 5 ameliorations CONCRETES et ACTIONNABLES (pas generiques)\n2) 3 features innovantes qui n'existent chez AUCUN concurrent\n3) Le prochain sprint de dev a faire cette semaine\n4) 1 pivot strategique si le marche evolue\n5) 1 partenariat concret a contacter MAINTENANT\n\n"+ctx,
+    // Iteration 3-4: go deeper
+    "POUSSE PLUS LOIN cette app (iteration #"+iter+"). Tout le basique est fait. Maintenant:\n\n1) 3 features WOW qui feraient buzzer l'app\n2) Comment monetiser 2x plus (nouveaux revenus)\n3) Plan d'acquisition: comment passer de 100 a 10 000 users\n4) UX: 3 irritants a corriger dans le prototype actuel\n5) Tech: quelle API ou techno ajouter pour un avantage decisif\n\n"+ctx,
+    // Iteration 5+: perfection
+    "PERFECTIONNE cette app (iteration #"+iter+"). L'app est deja bien avancee. Il faut:\n\n1) 3 micro-details UX qui font la difference entre une bonne app et une GRANDE app\n2) Strategie de retention: comment garder les users apres 1 semaine\n3) A/B tests a lancer: 3 hypotheses a tester\n4) Roadmap v2: les 5 features pour les 3 prochains mois\n5) Comment transformer les users en ambassadeurs\n\n"+ctx
+  ];
+  
+  var idx=Math.min(Math.floor((iter-1)/2), prompts.length-1);
+  return prompts[idx]+"\n\nIMPORTANT: Propose des choses DIFFERENTES des iterations precedentes. Injecte dans IdeaForge.";
+}
+
+// Determine next recommended action for an idea
+function nextStep(idea){
+  if(!idea.aiAnalysis)return{label:"Analyser",action:"showModal('Analyse',pFor('aiAnalysis',getI('"+idea.id+"')),true)",icon:"🔍",color:"var(--ac)"};
+  if(!idea.aiBusinessPlan)return{label:"Business Plan",action:"showModal('Business Plan',pFor('aiBusinessPlan',getI('"+idea.id+"')),true)",icon:"📊",color:"var(--am)"};
+  if(!idea.aiDevSpec)return{label:"Cahier des charges",action:"showModal('Specs',pFor('aiDevSpec',getI('"+idea.id+"')),true)",icon:"🛠",color:"var(--gn)"};
+  if(!idea.aiPrototype)return{label:"Developper prototype",action:"showModal('Prototype',pFor('aiPrototype',getI('"+idea.id+"')),true)",icon:"💻",color:"var(--pk)"};
+  if(!idea.aiTests)return{label:"Tester l'app",action:"showModal('Tests',pFor('aiTests',getI('"+idea.id+"')),true)",icon:"🧪",color:"var(--rd)"};
+  return{label:"Ameliorer (v"+((idea.iterations||0)+1)+")",action:"showModal('Ameliorer',pAmeliorer(getI('"+idea.id+"')),true)",icon:"🚀",color:"var(--am)"};
+}
+function bindStars(){
+  document.querySelectorAll(".st span").forEach(function(el){
+    el.onclick=function(e){e.stopPropagation();var c=this.dataset.c,v=parseInt(this.dataset.v);
+      if(S.view==="form"){if(!window._fs)window._fs={};var fi=window._fi||{scores:{}};var cur=window._fs[c]!==undefined?window._fs[c]:(fi.scores[c]||0);window._fs[c]=cur===v?0:v;render()}};
+  });
+}
+
+// Seed
+var PROTOS={};
+var SEED=[
+{id:"ami003",protoUrl:"./un-ami-dans-chaque-ville/prototype.html",title:"Un Ami Dans Chaque Ville",description:"Marketplace P2P achat et envoi a distance international. Un helper local achete un article pour toi et te envoie. Le Uber de achat a distance.",category:"consumer",status:"evaluated",priority:1,scores:{innovation:4,market:5,feasibility:3,revenue:5,impact:5},source:"Brainstorm",targetUsers:"Expatries, passionnes mode/deco/collector. Helpers: etudiants, voyageurs.",businessModel:"Commission 15-20%. Freemium. Premium: assurance, express, concierge.",competitors:"Grabr (US), PiggyBee (petit), TaskRabbit (local). Vierge en Europe.",mvpEstimate:"3 semaines, 61h",notes:"Mode Voyageur + Vitrine locale + Web of Trust escrow.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 88/100. Innovation 4, Marche 5, Faisabilite 3, Monetisation 5, Impact 5. Forces: effet reseau, asset-light, storytelling. Faiblesses: cold start, douanes, fraude.",aiBusinessPlan:"PROPOSITION DE VALEUR\nTu craques pour un produit dispo uniquement au Japon ? Un ami a Tokyo te achete et te envoie. Marketplace P2P acheteurs de confiance partout dans le monde.\n\nMARCHE\n280M expatries monde. Cross-border e-commerce 750Mds. Segment P2P personal shopper 2-5Mds, quasi inexistant Europe. Segments: nostalgiques (40%), chasseurs sneakers/collector (30%), decouvreurs artisanat (20%), pragmatiques (10%). TAM 2Mds. SAM Europe 200M. SOM an1: 100K GMV.\n\nPRICING\nDemandeur Free (2 demandes/mois, <50EUR). Premium 4.99/mois (illimite, assurance, express). Helper gratuit (fixe sa commission 10-15%). Commission plateforme 15% sur service. Panier moyen 63EUR, commission 3.45EUR/tx. Upsells: assurance 2.99, express, concierge +5EUR.\n\nGO-TO-MARKET\nSem1-2: 30 helpers dans 10 villes via groupes FB expatries (Francais a Tokyo 15K, NYC 25K, Londres 40K). 0% commission 20 premieres tx.\nSem3-4: Demandeurs via Reddit, Dealabs, groupes sneakers/collectors. Instagram unboxing.\nMois2: Effet reseau, contenu viral unboxing.\nMois3: Mode Voyageur (je pars a NYC, qui veut que je ramene qqch). Insert carte QR dans chaque colis.\n\nRISQUES\n1. Cold start → 10 villes, 3 helpers/ville minimum AVANT ouverture\n2. Fraude → escrow Stripe, photos+ticket obligatoires, garantie remboursement\n3. Douanes → seuil <150EUR, guide in-app\n4. Contrefacon → photos+ticket, service authentification v2\n\nKPIs\nNorth Star: taux match (demande→helper <48h, cible 50%+).\nM3: 50 helpers/10 villes, 100 demandeurs, 15 tx/mois, 67 MRR.\nM6: 200 helpers/25 villes, 500 demandeurs, 80 tx, 481 MRR.\nM12: 800 helpers/50 villes, 2500 demandeurs, 400 tx, 2405 MRR (29K ARR).\n\nFINANCES\nCouts: 60EUR M1-3, 585 M4-6, 2350 M7-12.\nBreakeven mois 6-7.\nOptimiste M12: 1000 tx/mois, 6000 MRR, 72K ARR.\nComparable Grabr valorise 50M$ a ce stade.",aiDevSpec:"3 pages HTML + Supabase + Stripe Connect + Mapbox. 61h, 3 semaines.",aiPrototype:"Prototype v2 fonctionnel avec 4 vues: Explorer, Demandes, Voyageurs, Helper."},
+{id:"wc004",protoUrl:"./foot-flash-2026/index.html",title:"Foot Flash 2026",description:"App supporter Coupe du Monde 2026. Calendrier par equipe et fuseau, chaines TV, stats joueurs, infos terrain, quiz et pronostics sociaux.",category:"entertainment",status:"evaluated",priority:1,scores:{innovation:4,market:5,feasibility:4,revenue:4,impact:5},source:"Brainstorm",targetUsers:"Supporters football monde entier, voyageurs sportifs sur place.",businessModel:"Freemium. Premium 2.99 one-shot. Pub CPM. Partenariats medias.",competitors:"FIFA+ (UX lourde), FotMob (pas Mondial specifique), OneFootball (general).",mvpEstimate:"4 semaines (3 sprints)",notes:"TIMING CRITIQUE: Mondial ete 2026. Mon Mondial perso + Mode Stade geoloc + Pronostics sociaux.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 88/100. Innovation 4, Marche 5, Faisabilite 4, Monetisation 4, Impact 5. Timing = premier entrant. Prototype v3.3 existant.",aiBusinessPlan:"PROPOSITION DE VALEUR\nTu suis les Bleus au Mondial 2026 ? Foot Flash te dit tout: prochain match a ton heure, sur quelle chaine, stats joueurs, et si tu es sur place ou voir les seances.\n\nMARCHE\nMondial 2022: 5Mds telespectateurs, 240M installs apps sport. 2026 = 50% plus gros (48 equipes, 3 pays, 39 jours). Francophone: 80M+ fans (France+Belgique+Suisse+Afrique). TAM 240M installs. SAM francophone 15M. SOM: 75K installs.\n\nPRICING\nFree: calendrier, scores, chaines TV, 1 equipe. Premium 2.99 one-shot: toutes equipes, alertes, stats, hors-ligne, 0 pub, pronostics. Pub CPM entre matchs. Partenariats medias.\nProjection: 75K installs, 8% premium = 17 940. Pub 6 750. Partenariat 2-10K.\n\nGO-TO-MARKET\nPhase 1 (janv-mai): SEO (calendrier mondial 2026), landing, contenu groupes/equipes, TikTok.\nPhase 2 (mai-juin): MAJ listes joueurs instantanee, partenariat comptes foot Twitter/Instagram.\nPhase 3 (juin-juil): scores direct, pronostics viraux, Mode Stade.\nLevier viral: pronostics entre amis = 5-15 installs organiques/groupe.\n\nMVP 4 semaines\nSprint1: calendrier 104 matchs, fuseaux auto, chaines TV, fiches equipes/joueurs, alertes.\nSprint2: pronostics, classement amis, quiz, scores direct.\nSprint3: Mode Stade (fan zones, stades, transports, seances, meteo).\nStack: HTML ou React + API-Football + Supabase + Vercel. API 10-50 EUR/mois.\n\nRISQUES\n1. Retard dev → proto existant, commencer 6 mois avant, MVP minimal = calendrier+chaines\n2. API down → cache local, 2e source ESPN\n3. Concurrence FIFA+ → notre angle = perso + pronostics + terrain\n4. Duree limitee → pivoter Euro 2028, CAN, Champions League\n\nKPIs\nPre-Mondial: 5K pre-inscriptions, 50K pages SEO/mois.\nJ1: 10K installs. Total: 75K. DAU: 15K. Pronostics/jour: 8K. Conversion: 8%. Note: 4.5+.\nNorth Star: DAU jour match France (cible 15K+).\n\nFINANCES\nCouts: 675 EUR total (API 160, domaine 15, marketing 500).\nRevenus: 26K-60K EUR (premium + pub + partenariat).\nROI: x40 a x90. Post-Mondial: app perenne Euro 2028, abo annuel 4.99.",aiPrototype:"Prototype v2 fonctionnel (index.html). Calendrier, groupes, 19 equipes, fiches joueurs reels (mars 2026 FFF), pronostics, quiz 8 questions. Donnees France Groupe I verifiees (vs Senegal/barragiste/Norvege). Design vert neon.",
+aiImprove:"ITERATION 1: Mode Second Ecran, Mon Voyage Mondial, Feed social, Resumes audio IA, Album Panini digital, VAR Replay, Comparateur joueurs, Alertes granulaires, Predictions IA, Carte fan zones. Pivots: Flash Football, PronoFlash, SportTrip.\n\nITERATION 2: 1) Countdown Live anime prochain match 2) Chaines TV auto-detectees par pays (timezone→pays) 3) Comparateur matchs simultanes split-screen 4) H2H historique confrontations 5) Mon Tableau simulateur phase finale partageable image. Features: Ambiance Stade Live crowdsource, Alertes Multi-Matchs, Timeline Photo album souvenir. Sprint: Countdown+Simulateur+Chaines (5j 20h). Pivot: Foot Flash Social reseau ephemere Mondial. Partenariat: RMC Sport widget+article.",aiTests:"AUDIT v1 (10 avril 2026) — Note 5.5/10\nBUGS CORRIGES: 1) France 26 joueurs (liste FFF mars 2026 complete) 2) Filtres groupes dynamiques (plus A-F fixe) 3) Quiz reponses melangees aleatoirement 4) Boutons nav agrandis 48px touch target 5) Pronos sauvegardes localStorage 6) Contraste texte secondaire ameliore 7) Scroll-to-top sur changement onglet.\nBUGS RESTANTS: 1) Seulement 16 matchs sur 104 2) 19 equipes sur 48 3) Matchs knockout avec TBD/1A/2B.\nUX: Design OK, bon contraste principal, inputs pronos fonctionnels. Nav trop petite corrigee.\nSECURITE: Pas de risque XSS (donnees statiques). Pronos en localStorage clair (acceptable).\nVERDICT: NON prete pour vrais users. Manque 88 matchs et 29 equipes. Avec 2-3 jours de travail = prete.",aiDevSpec:"ARCHITECTURE\nHTML mono-fichier, donnees JSON embarquees (0 backend pour MVP). Evolution proto v3.3 vert neon.\n\nMUST (sem1-3 avril): Calendrier 104 matchs, fuseau auto, filtre Mon equipe, chaines TV par pays, 48 fiches equipes, fiches joueurs stats, alertes DANS 2H/EN COURS.\nSHOULD (sem4-6 mai): Pronostics score, classement amis Supabase, quiz, listes officielles joueurs, tableaux groupes, scores direct API-Football, hors-ligne.\nCOULD (sem7-9 juin): Mode Stade 16 villes, seances entrainement, stats avancees, notifications push, badges.\n\nPLANNING 9 SEMAINES (10 avril → 11 juin)\nS1-3: Structure+design+calendrier+equipes+joueurs+chaines\nS4-6: Pronostics+quiz+scores live+MAJ joueurs+polish\nS7-9: Deploy+SEO+marketing+Mode Stade+beta+launch\n\nESTIMATION: 64h sur 9 semaines. Stack: HTML+JSON statique+API-Football(10-50EUR)+Supabase(gratuit)+Vercel."},
+{id:"dj001",protoUrl:"./dj-crowd-connect.html",title:"DJ Crowd Connect",description:"Interaction public/DJ en temps reel via QR code. Requetes, votes, playlist collaborative, vibes.",category:"entertainment",status:"evaluated",priority:2,scores:{innovation:4,market:4,feasibility:5,revenue:3,impact:5},source:"Brainstorm",targetUsers:"DJs, bars, clubs, mariages, festivals.",businessModel:"Free, Pro 7.99/mois, Business 19.99/mois.",competitors:"Jukestar, Rockbot, Crowd DJ (US, chers).",mvpEstimate:"5-7 jours, 31h",notes:"Viral: chaque soiree = acquisition.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 84/100. Innovation 4, Marche 4, Faisabilite 5, Monetisation 3, Impact 5.\nREFORMULATION: Tu es en soiree, tu veux entendre ton son ? Scanne le QR, vote, et le DJ joue ce que la foule veut. Le Shazam inverse.\nFORCES: 1) Viralite integree (chaque soiree = 50-500 impressions QR, 0 marketing) 2) Zero friction public (pas d app, QR → web → voter en 5s) 3) MVP le plus rapide (31h, Supabase Realtime).\nFAIBLESSES: 1) Monetisation fragile (free vs payant equilibre delicat) 2) Dependance au DJ (s il n affiche pas le QR, rien) 3) Concurrence US peut attaquer Europe (Rockbot 15M$ leves).\nAMELIORATIONS: 1) Pourboire digital (1-5 EUR pour booster requete, DJ gagne 50-200 EUR/soiree) 2) Vibe-O-Metre temps reel projete (jauge energie foule) 3) Playlist collab post-soiree (lien Spotify partageable Instagram).\nCONCURRENTS: Jukestar (app obligatoire, cher), Rockbot (B2B commercial, pas DJ events, 99$/mois), Crowd DJ (quasi-mort), Request-live (basique). 90% des DJs = le vrai concurrent est le rien.",aiBusinessPlan:"Commission/abo. TAM Europe 25M. Cible an1: 500 DJs = 25K ARR. MVP 31h.",aiDevSpec:"2 fichiers HTML + Supabase realtime. 31h, 5-7 jours.",aiPrototype:"Prototype: vue Public (requetes, votes, vibes) + vue DJ (QR, moderation, stats)."},
+{id:"dog005",protoUrl:"./dogsiter/prototype.html",title:"DogSiter",description:"Garde de chien last-minute geolocalisee. Bouton SOS pour trouver un sitter verifie en 60 secondes.",category:"consumer",status:"evaluated",priority:2,scores:{innovation:3,market:5,feasibility:5,revenue:4,impact:4},source:"Brainstorm",targetUsers:"Proprietaires chiens 7.5M France. Sitters: etudiants, retraites.",businessModel:"Commission 15-20%. Abo premium 6.99/mois. Upsells: assurance, camera.",competitors:"Rover (pas last-minute), Animaute (classique), Emprunte Mon Toutou (gratuit).",mvpEstimate:"2 semaines, 43h",notes:"SOS Mode 1 tap + Pack Confiance + Mon Sitter Favori.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 84/100. Innovation 3, Marche 5, Faisabilite 5, Monetisation 4, Impact 4. Last-minute = ocean bleu.",aiBusinessPlan:"Commission 15%. Breakeven mois 4-5. M12: 5100 MRR, 61K ARR. North Star: taux match SOS <5min.",aiDevSpec:"Mono-fichier HTML + Supabase + Stripe + Geoloc. 43h, 2 semaines.",aiPrototype:"Prototype: vue Proprio (SOS, sitters proches, reservation) + vue Sitter (toggle dispo, demandes, stats)."},
+{id:"geo002",protoUrl:"",title:"Music GeoTagger",description:"App Mac DJ: scan dossiers musique, identification pays artiste, taguage ID3, reorganisation par pays.",category:"entertainment",status:"draft",priority:3,scores:{},source:"Brainstorm",targetUsers:"DJs, collectionneurs musique.",businessModel:"Freemium 500 titres, premium 9.99/an.",competitors:"MusicBrainz Picard (general). Aucun concurrent direct tri geo.",mvpEstimate:"2 semaines",notes:"Synergie DJ Crowd Connect. Carte monde = killer feature.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()},
+{id:"arb006",protoUrl:"embedded",title:"ARBITRE Sport",description:"App d'arbitrage multi-sports. Chronometre, score, cartons jaunes/rouges, remplacements, rapport de match. Football d'abord puis handball, basket, rugby, volley. Le cockpit de l'arbitre moderne.",category:"consumer",status:"evaluated",priority:2,scores:{innovation:2,market:4,feasibility:5,revenue:3,impact:4},source:"Florain",targetUsers:"Arbitres amateurs (230K licencies FFF), coachs, organisateurs tournois, matchs corpo/amis, parents.",businessModel:"Freemium: foot gratuit, multi-sports 2.99. Abo ligue/club 49/an (rapport PDF). Mode Tournoi 4.99.",competitors:"RefSix (UK, anglais, complexe), Reffy (US, payant), Game Official (date). 90% des arbitres = chrono telephone + papier.",mvpEstimate:"1-2 jours",notes:"MVP ultra-rapide. Utilise chaque weekend. Bouche-a-oreille vestiaires. Rapport PDF = upsell. Mode Tournoi = monetisation.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 72/100. Innovation 2/5 (concept existant mais aucun bon en francais multi-sports). Marche 4/5 (230K arbitres FFF + coachs + tournois amateurs). Faisabilite 5/5 (chrono+boutons+localStorage, 0 API). Monetisation 3/5 (niche, ticket bas, volume possible). Impact 4/5 (resout vrai probleme chaque weekend).\nFORCES: 1) Utilise chaque weekend (30-40 matchs/saison = retention naturelle) 2) MVP 1-2 jours (0 serveur, 0 API) 3) Bouche-a-oreille arbitres (reseau ferme, vestiaires).\nFAIBLESSES: 1) Niche (230K arbitres = petit, elargir coachs/tournois/amis) 2) Concurrence existante (RefSix gratuit bien fait) 3) Monetisation difficile (arbitre amateur ne paye pas pour un chrono).\nAMELIORATIONS: 1) Rapport PDF auto (score, buteurs, cartons, remplacements → envoi WhatsApp) = upsell premium 2) Mode Tournoi (8 matchs, classements auto, tableau final, 4.99) 3) Gestes arbitrage (rappel visuel signaux officiels, formation jeunes arbitres).\nCONCURRENTS: RefSix (UK, anglais, complexe), Reffy (US, 5$/mois), Game Official (date), chrono telephone (90% des arbitres)."},
+{id:"map007",protoUrl:"",title:"Carte Sacree Interactive",description:"Carte interactive exploitant Google Maps/Earth pour identifier et visualiser les alignements de l'architecture sacree. Eglises, cathedrales, temples, megalithes, sites antiques — trouver les lignes geometriques cachees entre les lieux sacres du monde.",category:"other",status:"evaluated",priority:2,scores:{innovation:5,market:3,feasibility:4,revenue:3,impact:4},source:"Florain",targetUsers:"Passionnes d'architecture sacree, chercheurs en archeologie, touristes culturels, amateurs d'histoire, communaute ley lines / geometrie sacree.",businessModel:"Freemium: exploration gratuite. Premium: outils d'analyse avances (tracer ses propres alignements, export KML, mesures angles/distances). Abo 4.99/mois ou 29.99/an.",competitors:"Google Earth (brut, pas d'analyse alignements), Sacred Sites app (basique, peu de donnees), Ancient Wisdom Map (web amateur). Aucun outil pro qui combine carte + detection d'alignements.",mvpEstimate:"Prototype existant. A integrer.",notes:"Exploiter APIs Google Maps + Earth. Donnees: coordonnees GPS sites sacres (Wikidata, OpenStreetMap tag=place_of_worship). Overlay lignes entre sites. Calcul angles, distances, alignements. Synergie avec competences archi/urbanisme Florain.",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),aiAnalysis:"Score 76/100. Innovation 5/5 (aucun outil combine carte interactive + detection alignements architecture sacree — concept unique). Marche 3/5 (niche passionnee mais petite: communaute geometrie sacree, archeo-astronomie, tourisme culturel. Potentiel viral TikTok/YouTube). Faisabilite 4/5 (Google Maps API + base de coordonnees sites sacres + calcul geometrique = faisable. Prototype existant). Monetisation 3/5 (niche, ticket moyen possible en premium pro. Marche du tourisme culturel = relais). Impact 4/5 (revele des patterns invisibles a oeil nu, fascine, eduque, fait voyager).\nFORCES: 1) Concept unique — personne ne fait ca proprement 2) Contenu viral naturel (chaque alignement decouvert = un post fascinant) 3) Competence archi de Florain = credibilite 4) Base de donnees OpenStreetMap/Wikidata gratuite.\nFAIBLESSES: 1) Niche (combien de gens cherchent des alignements sacres?) 2) Google Maps API payante au-dela du quota gratuit 3) Risque d'etre associe a du pseudo-scientifique.\nAMELIORATIONS: 1) Mode Decouverte guide (circuits touristiques le long d'alignements) 2) Contribution communautaire (les users ajoutent des sites) 3) Overlay 3D avec Google Earth pour visualiser les alignements en relief."}
+];
+
+var saved=load();
+if(saved&&saved.ideas){S.ideas=saved.ideas;
+  SEED.forEach(function(s){var ex=S.ideas.find(function(i){return i.id===s.id});
+    if(!ex)S.ideas.push(s);
+    else{STEPS.concat(["aiImprove","protoUrl"]).forEach(function(k){if(s[k]&&!ex[k])ex[k]=s[k]});
+      if(s.scores&&Object.keys(s.scores).length&&(!ex.scores||!Object.keys(ex.scores).length)){ex.scores=s.scores;ex.status=s.status}}
+  });
+}else S.ideas=SEED.slice();
+save();render();
+</script>
+</body>
+</html>
