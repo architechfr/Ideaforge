@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🌍 Un Ami Dans Chaque Ville</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f8f6f3;--wh:#fff;--sh:rgba(0,0,0,.06);
+  --tx:#1a1715;--tx2:#5c5650;--tx3:#9a918a;
+  --coral:#e8604c;--coral2:#ff7b5f;--coralL:rgba(232,96,76,.06);
+  --teal:#0b8a6f;--tealL:rgba(11,138,111,.06);
+  --gold:#d4930d;--goldL:rgba(212,147,13,.06);
+  --r:20px;--r2:14px;--r3:10px;
+  --f:'DM Sans',sans-serif;--fd:'Playfair Display',serif;
+}
+body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100dvh;-webkit-font-smoothing:antialiased}
+.app{max-width:500px;margin:0 auto;padding:0 16px 110px}
+
+/* Nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);display:flex;justify-content:center;z-index:100;padding:8px 0 env(safe-area-inset-bottom,10px)}
+.bnav-i{display:flex;max-width:500px;width:100%}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:transparent;color:var(--tx3);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--f);transition:color .15s}
+.bnav .on{color:var(--coral)}
+.bnav .ic{font-size:24px;line-height:1}
+
+/* Hero */
+.hero{margin:0 -16px;padding:40px 24px 32px;background:linear-gradient(135deg,#1a1715 0%,#2d2520 50%,#3d2e25 100%);color:#fff;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero h1{font-family:var(--fd);font-size:28px;font-weight:700;margin-bottom:8px;position:relative}
+.hero p{font-size:14px;opacity:.7;line-height:1.5;max-width:320px;margin:0 auto;position:relative}
+.hero-stats{display:flex;justify-content:center;gap:32px;margin-top:24px;position:relative}
+.hero-stat{text-align:center}
+.hero-stat-n{font-size:28px;font-weight:800;color:var(--coral2)}
+.hero-stat-l{font-size:11px;opacity:.5;margin-top:2px}
+
+/* Cities scroll */
+.cities-scroll{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 12px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.cities-scroll::-webkit-scrollbar{display:none}
+.city-card{flex-shrink:0;width:130px;background:var(--wh);border-radius:var(--r2);overflow:hidden;box-shadow:0 2px 8px var(--sh);cursor:pointer;transition:transform .2s}
+.city-card:active{transform:scale(.96)}
+.city-bg{height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.city-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(0,0,0,.3))}
+.city-info{padding:10px 12px}
+.city-name{font-size:13px;font-weight:700}
+.city-helpers{font-size:11px;color:var(--coral);font-weight:600}
+
+/* Section */
+.sec{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px}
+.sec-t{font-size:18px;font-weight:800}
+.sec-link{font-size:13px;color:var(--coral);font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--f)}
+
+/* Request cards */
+.req{background:var(--wh);border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:0 2px 12px var(--sh);cursor:pointer;transition:box-shadow .2s}
+.req:active{box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.req-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
+.req-badge{position:absolute;top:12px;left:12px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.req-badge-open{background:rgba(11,138,111,.9);color:#fff}
+.req-badge-matched{background:rgba(37,99,235,.9);color:#fff}
+.req-badge-purchased{background:rgba(232,96,76,.9);color:#fff}
+.req-price{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.7);color:#fff;padding:4px 12px;border-radius:99px;font-size:14px;font-weight:800;backdrop-filter:blur(10px)}
+.req-body{padding:16px}
+.req-h{font-size:16px;font-weight:700;margin-bottom:4px}
+.req-loc{font-size:13px;color:var(--coral);font-weight:600;margin-bottom:6px}
+.req-desc{font-size:13px;color:var(--tx2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.req-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.05)}
+.req-user{display:flex;align-items:center;gap:8px}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.req-uname{font-size:12px;font-weight:600}
+.req-umeta{font-size:11px;color:var(--tx3)}
+.req-time{font-size:11px;color:var(--tx3)}
+
+/* Trip cards */
+.trip{background:var(--wh);border-radius:var(--r2);padding:16px;margin-bottom:10px;box-shadow:0 1px 6px var(--sh);display:flex;gap:14px;align-items:center;cursor:pointer}
+.trip:active{background:#faf8f6}
+.trip-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.trip-info{flex:1}
+.trip-dest{font-size:15px;font-weight:700}
+.trip-date{font-size:12px;color:var(--coral);font-weight:600;margin-top:2px}
+.trip-meta{font-size:11px;color:var(--tx3);margin-top:2px}
+.trip-arrow{font-size:18px;color:var(--tx3)}
+
+/* CTA buttons */
+.cta-row{display:flex;gap:10px;margin:20px 0}
+.btn{padding:16px;border:none;border-radius:var(--r2);font-weight:700;font-size:15px;cursor:pointer;width:100%;text-align:center;font-family:var(--f);transition:opacity .15s}
+.btn:active{opacity:.85}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-outline{background:var(--wh);color:var(--tx);border:1.5px solid rgba(0,0,0,.12)!important}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-sm{padding:10px 16px;font-size:13px;border-radius:var(--r3)}
+
+/* Form */
+.fc{background:var(--wh);border-radius:var(--r2);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px var(--sh)}
+.fl{font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px;display:block}
+.fi,.fx,.ft{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid rgba(0,0,0,.08);border-radius:var(--r3);color:var(--tx);font-size:15px;font-family:var(--f);outline:none;transition:border-color .15s}
+.fi:focus,.ft:focus{border-color:var(--coral)}.ft{min-height:80px;resize:vertical}.fx{appearance:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Detail */
+.det-img{width:calc(100% + 32px);margin:-0px -16px 0;height:240px;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative}
+.det-img::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,var(--bg))}
+.det-h{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px}
+.det-loc{font-size:14px;color:var(--coral);font-weight:600;margin-bottom:12px}
+.det-desc{font-size:14px;color:var(--tx2);line-height:1.7;margin-bottom:16px}
+.det-box{background:var(--wh);border-radius:var(--r2);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px var(--sh)}
+.det-box h4{font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+
+/* Steps */
+.steps{margin:16px 0}
+.step{display:flex;gap:12px;padding:10px 0;position:relative}
+.step::before{content:'';position:absolute;left:15px;top:32px;width:2px;height:calc(100% - 16px);background:#e8e4df}
+.step:last-child::before{display:none}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;z-index:1;font-weight:700}
+.step-done{background:var(--tealL);color:var(--teal);border:2px solid var(--teal)}
+.step-cur{background:var(--coralL);color:var(--coral);border:2px solid var(--coral)}
+.step-todo{background:var(--bg);color:var(--tx3);border:2px solid #e0dbd5}
+.step-text{font-size:14px;font-weight:600;padding-top:5px}
+
+/* Chat */
+.chat{margin:16px 0}
+.msg{margin-bottom:10px;max-width:80%}
+.msg-out{margin-left:auto}
+.msg-bubble{padding:12px 16px;border-radius:20px;font-size:14px;line-height:1.5}
+.msg-out .msg-bubble{background:var(--coral);color:#fff;border-bottom-right-radius:4px}
+.msg-in .msg-bubble{background:var(--wh);color:var(--tx);box-shadow:0 1px 4px var(--sh);border-bottom-left-radius:4px}
+.msg-time{font-size:10px;color:var(--tx3);margin-top:3px;padding:0 6px}
+.msg-out .msg-time{text-align:right}
+.chat-bar{display:flex;gap:8px;position:sticky;bottom:80px;background:var(--bg);padding:10px 0}
+.chat-bar input{flex:1;padding:12px 18px;background:var(--wh);border:1.5px solid rgba(0,0,0,.08);border-radius:99px;font-size:14px;outline:none;font-family:var(--f)}
+.chat-bar input:focus{border-color:var(--coral)}
+.chat-bar button{width:46px;height:46px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0}
+
+/* Helper dashboard */
+.helper-hero{background:linear-gradient(135deg,var(--teal),#0a7a62);border-radius:var(--r);padding:24px;color:#fff;margin-bottom:16px;text-align:center}
+.helper-hero h2{font-family:var(--fd);font-size:22px;margin-bottom:4px}
+.h-stats{display:flex;justify-content:center;gap:24px;margin-top:16px}
+.h-stat-n{font-size:24px;font-weight:800}
+.h-stat-l{font-size:11px;opacity:.7}
+
+/* Misc */
+.back{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:var(--wh);border:1px solid rgba(0,0,0,.08);border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;margin:12px 0;color:var(--tx);font-family:var(--f);box-shadow:0 1px 4px var(--sh)}
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:var(--r2);font-size:14px;font-weight:700;z-index:999;animation:ti 2.5s forwards;white-space:nowrap;background:var(--teal);color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);font-family:var(--f)}
+@keyframes ti{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}10%,70%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+.empty{text-align:center;padding:40px 20px;color:var(--tx3)}.empty-i{font-size:52px;margin-bottom:12px}
+
+/* Color bands for city cards */
+.bg-milan{background:linear-gradient(135deg,#f0e6d8,#e8d5c0)}.bg-tokyo{background:linear-gradient(135deg,#fce4ec,#f8bbd0)}.bg-london{background:linear-gradient(135deg,#e0e7ef,#cfd8e3)}.bg-ny{background:linear-gradient(135deg,#e8eaf6,#c5cae9)}.bg-marrakech{background:linear-gradient(135deg,#fff3e0,#ffe0b2)}.bg-istanbul{background:linear-gradient(135deg,#e0f2f1,#b2dfdb)}.bg-bangkok{background:linear-gradient(135deg,#fce4ec,#f8bbd0)}.bg-lisbon{background:linear-gradient(135deg,#fff9c4,#fff59d)}.bg-seoul{background:linear-gradient(135deg,#e8eaf6,#d1c4e9)}.bg-mexico{background:linear-gradient(135deg,#dcedc8,#c5e1a5)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+var CATS=[{id:"mode",l:"Mode",e:"👗"},{id:"deco",l:"Déco",e:"🏠"},{id:"food",l:"Food",e:"🍝"},{id:"tech",l:"Tech",e:"🎮"},{id:"collector",l:"Collector",e:"💎"},{id:"other",l:"Autre",e:"📦"}];
+var ST={open:{l:"Ouverte",cls:"req-badge-open"},matched:{l:"Matchée",cls:"req-badge-matched"},purchased:{l:"Achetée",cls:"req-badge-purchased"},shipped:{l:"Envoyée",cls:"req-badge-matched"},delivered:{l:"Reçue",cls:"req-badge-open"},completed:{l:"Terminée",cls:"req-badge-open"}};
+var CITIES=[
+  {name:"Milan",flag:"🇮🇹",helpers:14,bg:"bg-milan",emoji:"🏛️"},
+  {name:"Tokyo",flag:"🇯🇵",helpers:9,bg:"bg-tokyo",emoji:"⛩️"},
+  {name:"Londres",flag:"🇬🇧",helpers:21,bg:"bg-london",emoji:"🎡"},
+  {name:"New York",flag:"🇺🇸",helpers:18,bg:"bg-ny",emoji:"🗽"},
+  {name:"Marrakech",flag:"🇲🇦",helpers:6,bg:"bg-marrakech",emoji:"🕌"},
+  {name:"Istanbul",flag:"🇹🇷",helpers:8,bg:"bg-istanbul",emoji:"🕌"},
+  {name:"Bangkok",flag:"🇹🇭",helpers:11,bg:"bg-bangkok",emoji:"🛕"},
+  {name:"Lisbonne",flag:"🇵🇹",helpers:7,bg:"bg-lisbon",emoji:"🚋"},
+  {name:"Séoul",flag:"🇰🇷",helpers:5,bg:"bg-seoul",emoji:"🏯"},
+  {name:"Mexico",flag:"🇲🇽",helpers:4,bg:"bg-mexico",emoji:"🌮"},
+];
+var REQS=[
+  {id:"r1",title:"Sac en cuir artisanal",desc:"Modèle marron avec bandoulière, taille medium. Scuola del Cuoio, près de Santa Croce.",city:"Florence",country:"🇮🇹",cat:"mode",budget:280,status:"matched",emoji:"👜",bg:"bg-milan",buyer:{name:"Florain",city:"Paris",avatar:"🧑‍💻",rating:0},helper:{name:"Luca",city:"Florence",avatar:"🇮🇹",rating:4.9,deals:23},t:Date.now()-7200000,msgs:[{f:"b",text:"Bonjour Luca ! Tu pourrais passer à la Scuola del Cuoio ?",t:Date.now()-7e6},{f:"h",text:"Ciao ! J'y passe demain matin. Je confirme le prix exact 🤙",t:Date.now()-68e5},{f:"b",text:"Super merci ! Voici le modèle exact que je veux",t:Date.now()-36e5},{f:"h",text:"Parfait, je vois lequel. Je te tiens au courant ! ✨",t:Date.now()-34e5}]},
+  {id:"r2",title:"Manette N64 japonaise",desc:"Manette officielle couleur atomique purple, état neuf. Super Potato, Akihabara.",city:"Tokyo",country:"🇯🇵",cat:"tech",budget:45,status:"open",emoji:"🎮",bg:"bg-tokyo",buyer:{name:"Alex",city:"Lyon",avatar:"🎮",rating:4.2},t:Date.now()-18e6},
+  {id:"r3",title:"Céramique du souk",desc:"Assiettes peintes main. Set de 6, motifs bleu/blanc traditionnels.",city:"Marrakech",country:"🇲🇦",cat:"deco",budget:60,status:"open",emoji:"🏺",bg:"bg-marrakech",buyer:{name:"Sophie",city:"Bordeaux",avatar:"🎨",rating:3.8},t:Date.now()-864e5},
+  {id:"r4",title:"Nike Dunk édition Milan",desc:"Nike Dunk Low 'Milan' colorway, taille 42. Exclusivité Foot Locker.",city:"Milan",country:"🇮🇹",cat:"mode",budget:160,status:"purchased",emoji:"👟",bg:"bg-milan",buyer:{name:"Marc",city:"Marseille",avatar:"👟",rating:4.5},helper:{name:"Giulia",city:"Milan",avatar:"👩‍🦰",rating:4.8,deals:45},t:Date.now()-172800000},
+  {id:"r5",title:"Pastéis de Belém",desc:"Boîte de 24 pastéis de nata de la pâtisserie originale.",city:"Lisbonne",country:"🇵🇹",cat:"food",budget:35,status:"open",emoji:"🥧",bg:"bg-lisbon",buyer:{name:"Julie",city:"Nice",avatar:"🍰",rating:4.0},t:Date.now()-432e5},
+];
+var TRIPS=[
+  {id:"t1",name:"Marie",av:"👩‍🦳",rating:4.7,deals:15,dest:"Rome 🇮🇹",date:"12–15 avril",cap:"Moyen colis",bg:"bg-milan"},
+  {id:"t2",name:"Karim",av:"🧔",rating:4.9,deals:31,dest:"Istanbul 🇹🇷",date:"18–22 avril",cap:"Petit colis",bg:"bg-istanbul"},
+  {id:"t3",name:"Yuki",av:"👩",rating:5.0,deals:8,dest:"Tokyo 🇯🇵",date:"20 avr–3 mai",cap:"Gros colis",bg:"bg-tokyo"},
+];
+
+var V={view:"home",did:null};
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function tAgo(t){var m=Math.floor((Date.now()-t)/6e4);if(m<60)return m+"min";if(m<1440)return Math.floor(m/60)+"h";return Math.floor(m/1440)+"j"}
+function toast(m){var e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);setTimeout(function(){e.remove()},2600)}
+function go(v){V.view=v;V.did=null;scrollTo(0,0);render()}
+function show(id){V.did=id;V.view='detail';scrollTo(0,0);render()}
+
+function render(){
+  var a=document.getElementById('app'),h='';
+  if(V.view==='home')h=rHome();
+  else if(V.view==='requests')h=rReqs();
+  else if(V.view==='detail')h=rDetail();
+  else if(V.view==='post')h=rPost();
+  else if(V.view==='trips')h=rTrips();
+  else if(V.view==='helper')h=rHelper();
+  if(V.view!=='detail'&&V.view!=='post'){
+    h+='<div class="bnav"><div class="bnav-i">';
+    h+=nb('home','🌍','Explorer')+nb('requests','🛍️','Demandes')+nb('trips','✈️','Voyages')+nb('helper','🤝','Helper');
+    h+='</div></div>';
+  }
+  a.innerHTML=h;
+}
+function nb(v,i,l){return'<button class="'+(V.view===v?'on':'')+'" onclick="go(\''+v+'\')"><span class="ic">'+i+'</span>'+l+'</button>'}
+
+// ═══ HOME ═══
+function rHome(){
+  var tH=CITIES.reduce(function(a,c){return a+c.helpers},0);
+  var h='<div class="hero"><h1>Un Ami Dans<br>Chaque Ville</h1><p>L\'article que tu veux, où qu\'il soit.<br>Un local de confiance l\'achète et te l\'envoie.</p>';
+  h+='<div class="hero-stats"><div class="hero-stat"><div class="hero-stat-n">'+CITIES.length+'</div><div class="hero-stat-l">Villes</div></div><div class="hero-stat"><div class="hero-stat-n">'+tH+'</div><div class="hero-stat-l">Helpers</div></div><div class="hero-stat"><div class="hero-stat-n">'+REQS.length+'</div><div class="hero-stat-l">Demandes</div></div></div></div>';
+
+  // CTAs
+  h+='<div class="cta-row"><button class="btn btn-coral" onclick="go(\'post\')" style="flex:1">🛍️ Je cherche un article</button><button class="btn btn-outline" onclick="go(\'helper\')" style="flex:1">🤝 Devenir Helper</button></div>';
+
+  // Cities
+  h+='<div class="sec"><span class="sec-t">🗺️ Villes</span></div>';
+  h+='<div class="cities-scroll">';
+  CITIES.forEach(function(c){
+    h+='<div class="city-card" onclick="toast(\'📍 '+c.name+' — '+c.helpers+' helpers\')"><div class="city-bg '+c.bg+'">'+c.emoji+'</div><div class="city-info"><div class="city-name">'+c.name+' '+c.flag+'</div><div class="city-helpers">'+c.helpers+' helpers</div></div></div>';
+  });
+  h+='</div>';
+
+  // Requests
+  h+='<div class="sec"><span class="sec-t">Demandes récentes</span><button class="sec-link" onclick="go(\'requests\')">Voir tout →</button></div>';
+  REQS.filter(function(r){return r.status==='open'}).slice(0,3).forEach(function(r){h+=reqCard(r)});
+
+  // Trips
+  h+='<div class="sec"><span class="sec-t">Voyageurs dispo</span><button class="sec-link" onclick="go(\'trips\')">Voir tout →</button></div>';
+  TRIPS.slice(0,2).forEach(function(t){h+=tripCard(t)});
+  return h;
+}
+
+function reqCard(r){
+  var s=ST[r.status]||ST.open;
+  var h='<div class="req" onclick="show(\''+r.id+'\')">';
+  h+='<div class="req-img '+r.bg+'">'+r.emoji+'<span class="req-badge '+s.cls+'">'+s.l+'</span><span class="req-price">'+r.budget+' €</span></div>';
+  h+='<div class="req-body"><div class="req-h">'+esc(r.title)+'</div><div class="req-loc">📍 '+r.city+' '+r.country+'</div><div class="req-desc">'+esc(r.desc)+'</div>';
+  h+='<div class="req-foot"><div class="req-user"><div class="av" style="background:var(--coralL)">'+r.buyer.avatar+'</div><div><div class="req-uname">'+r.buyer.name+'</div><div class="req-umeta">'+r.buyer.city+(r.buyer.rating?' · ⭐'+r.buyer.rating:'')+'</div></div></div><span class="req-time">il y a '+tAgo(r.t)+'</span></div>';
+  h+='</div></div>';
+  return h;
+}
+
+function tripCard(t){
+  return'<div class="trip" onclick="toast(\'💬 Message envoyé à '+t.name+' !\')"><div class="trip-av" style="background:var(--tealL)">'+t.av+'</div><div class="trip-info"><div class="trip-dest">'+t.dest+'</div><div class="trip-date">📅 '+t.date+' · '+t.cap+'</div><div class="trip-meta">'+t.name+' · ⭐'+t.rating+' · '+t.deals+' missions</div></div><span class="trip-arrow">›</span></div>';
+}
+
+// ═══ REQUESTS ═══
+function rReqs(){
+  var h='<div style="padding-top:16px"><div class="sec"><span class="sec-t">🛍️ Toutes les demandes</span></div>';
+  h+='<button class="btn btn-coral btn-sm" onclick="go(\'post\')" style="margin-bottom:14px">+ Nouvelle demande</button>';
+  REQS.forEach(function(r){h+=reqCard(r)});
+  h+='</div>';return h;
+}
+
+// ═══ DETAIL ═══
+function rDetail(){
+  var r=REQS.find(function(d){return d.id===V.did});
+  if(!r)return'<button class="back" onclick="go(\'requests\')">← Retour</button><div class="empty">Non trouvée</div>';
+  var s=ST[r.status]||ST.open;
+  var steps=[
+    {l:"Demande publiée",done:true},
+    {l:"Helper trouvé"+(r.helper?" : "+r.helper.name+" ⭐"+r.helper.rating:""),done:["matched","purchased","shipped","delivered","completed"].indexOf(r.status)>=0},
+    {l:"Article acheté",done:["purchased","shipped","delivered","completed"].indexOf(r.status)>=0},
+    {l:"Colis envoyé",done:["shipped","delivered","completed"].indexOf(r.status)>=0},
+    {l:"Reçu & confirmé",done:["delivered","completed"].indexOf(r.status)>=0},
+  ];
+  var ci=steps.findIndex(function(s){return!s.done});if(ci<0)ci=steps.length;
+
+  var h='<button class="back" onclick="go(\'requests\')">← Retour</button>';
+  h+='<div class="det-img '+r.bg+'">'+r.emoji+'</div>';
+  h+='<div class="det-h">'+esc(r.title)+'</div>';
+  h+='<div class="det-loc">📍 '+r.city+' '+r.country+'</div>';
+  h+='<div class="det-desc">'+esc(r.desc)+'</div>';
+
+  h+='<div class="det-box"><h4>💰 Budget</h4><div style="font-size:22px;font-weight:800;color:var(--coral)">'+r.budget+' €</div><div style="font-size:12px;color:var(--tx3);margin-top:2px">Commission helper incluse (~15%)</div></div>';
+
+  h+='<div class="det-box"><h4>👤 Demandeur</h4><div class="req-user"><div class="av" style="background:var(--coralL)">'+r.buyer.avatar+'</div><div><div class="req-uname">'+r.buyer.name+'</div><div class="req-umeta">'+r.buyer.city+'</div></div></div></div>';
+
+  if(r.helper){
+    h+='<div class="det-box" style="border-left:3px solid var(--teal)"><h4>🤝 Helper</h4><div class="req-user"><div class="av" style="background:var(--tealL)">'+r.helper.avatar+'</div><div><div class="req-uname">'+r.helper.name+' ⭐'+r.helper.rating+'</div><div class="req-umeta">'+r.helper.city+' · '+r.helper.deals+' missions</div></div></div></div>';
+  }
+
+  h+='<div class="det-box"><h4>📍 Suivi</h4><div class="steps">';
+  steps.forEach(function(s,i){
+    var c=s.done?'step-done':(i===ci?'step-cur':'step-todo');
+    var ic=s.done?'✓':(i===ci?'→':'·');
+    h+='<div class="step"><div class="step-dot '+c+'">'+ic+'</div><div class="step-text">'+s.l+'</div></div>';
+  });
+  h+='</div></div>';
+
+  if(r.status==='open')h+='<button class="btn btn-teal" onclick="acceptR(\''+r.id+'\')">🤝 J\'accepte cette mission</button>';
+
+  if(r.msgs&&r.msgs.length){
+    h+='<div class="sec"><span class="sec-t">💬 Messages</span></div><div class="chat">';
+    r.msgs.forEach(function(m){
+      var out=m.f==='b';
+      h+='<div class="msg'+(out?' msg-out':'')+'"><div class="msg-bubble">'+esc(m.text)+'</div><div class="msg-time">il y a '+tAgo(m.t)+'</div></div>';
+    });
+    h+='</div><div class="chat-bar"><input id="ci" placeholder="Écrire..." onkeydown="if(event.key===\'Enter\')sendM(\''+r.id+'\')"><button onclick="sendM(\''+r.id+'\')">▶</button></div>';
+  }
+  return h;
+}
+
+function acceptR(id){var r=REQS.find(function(d){return d.id===id});if(!r)return;r.status='matched';r.helper={name:"Vous",city:"Votre ville",avatar:"🤝",rating:0,deals:0};r.msgs=[{f:"h",text:"Bonjour ! J'accepte votre demande 🙌",t:Date.now()}];toast('🤝 Mission acceptée !');render()}
+function sendM(id){var i=document.getElementById('ci');if(!i||!i.value.trim())return;var r=REQS.find(function(d){return d.id===id});if(!r)return;if(!r.msgs)r.msgs=[];r.msgs.push({f:"b",text:i.value.trim(),t:Date.now()});render();setTimeout(function(){scrollTo(0,document.body.scrollHeight)},100)}
+
+// ═══ POST ═══
+function rPost(){
+  var h='<button class="back" onclick="go(\'home\')">← Retour</button>';
+  h+='<div style="font-family:var(--fd);font-size:22px;font-weight:700;margin-bottom:16px">Nouvelle demande</div>';
+  h+='<div class="fc"><label class="fl">Quel article cherches-tu ?</label><input class="fi" id="p-t" placeholder="Ex: Sac en cuir artisanal"></div>';
+  h+='<div class="fc"><label class="fl">Détails</label><textarea class="ft" id="p-d" placeholder="Modèle, taille, couleur, nom de la boutique..."></textarea></div>';
+  h+='<div class="fr"><div class="fc"><label class="fl">Ville</label><input class="fi" id="p-c" placeholder="Florence"></div>';
+  h+='<div class="fc"><label class="fl">Pays</label><input class="fi" id="p-co" placeholder="🇮🇹 Italie"></div></div>';
+  h+='<div class="fr"><div class="fc"><label class="fl">Catégorie</label><select class="fx" id="p-cat">';
+  CATS.forEach(function(c){h+='<option value="'+c.id+'">'+c.e+' '+c.l+'</option>'});
+  h+='</select></div><div class="fc"><label class="fl">Budget max (€)</label><input class="fi" id="p-b" type="number" placeholder="250"></div></div>';
+  h+='<button class="btn btn-coral" onclick="doPost()" style="margin-top:8px">📤 Publier</button>';
+  return h;
+}
+function doPost(){
+  var t=document.getElementById('p-t').value.trim();if(!t){toast('⚠️ Donne un titre');return}
+  var cat=CATS.find(function(c){return c.id===(document.getElementById('p-cat').value||'other')})||CATS[5];
+  REQS.unshift({id:'r'+Date.now(),title:t,desc:document.getElementById('p-d').value||'',city:document.getElementById('p-c').value||'?',country:document.getElementById('p-co').value||'',cat:cat.id,budget:parseInt(document.getElementById('p-b').value)||0,status:'open',emoji:cat.e,bg:'bg-milan',buyer:{name:"Florain",city:"Paris",avatar:"🧑‍💻",rating:0},t:Date.now()});
+  toast('✅ Demande publiée !');go('requests');
+}
+
+// ═══ TRIPS ═══
+function rTrips(){
+  var h='<div style="padding-top:16px"><div class="sec"><span class="sec-t">✈️ Voyageurs</span></div>';
+  h+='<p style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.5">Des helpers qui voyagent bientôt et peuvent ramener des articles pour toi.</p>';
+  h+='<button class="btn btn-outline btn-sm" onclick="toast(\'✈️ Bientôt disponible !\')" style="margin-bottom:14px">+ Je pars en voyage</button>';
+  TRIPS.forEach(function(t){h+=tripCard(t)});
+  h+='</div>';return h;
+}
+
+// ═══ HELPER ═══
+function rHelper(){
+  var matched=REQS.filter(function(r){return r.helper});
+  var gains=Math.round(matched.reduce(function(a,r){return a+r.budget*.15},0));
+  var open=REQS.filter(function(r){return r.status==='open'});
+
+  var h='<div style="padding-top:16px"><div class="helper-hero"><h2>🤝 Dashboard Helper</h2><p style="font-size:13px;opacity:.8">Gagne de l\'argent en aidant des acheteurs</p>';
+  h+='<div class="h-stats"><div><div class="h-stat-n">'+matched.length+'</div><div class="h-stat-l">Missions</div></div><div><div class="h-stat-n">'+gains+'€</div><div class="h-stat-l">Gains</div></div><div><div class="h-stat-n">⭐4.8</div><div class="h-stat-l">Note</div></div></div></div>';
+
+  h+='<div class="sec"><span class="sec-t">🟢 Missions dispo ('+open.length+')</span></div>';
+  open.forEach(function(r){h+=reqCard(r)});
+
+  if(matched.length){h+='<div class="sec"><span class="sec-t">📋 Mes missions</span></div>';matched.forEach(function(r){h+=reqCard(r)})}
+  h+='</div>';return h;
+}
+
+render();
+</script>
+</body>
+</html>
