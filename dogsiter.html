@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1008">
+<title>DogSiter</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#1a1008;--bg2:#241a0e;--bg3:#2e2214;
+--tx:#fff8f0;--tx2:#b8a088;--tx3:#786048;
+--or:#f97316;--or2:#ea580c;--am:#f59e0b;--gn:#22c55e;--rd:#ef4444;--bl:#3b82f6;
+--r:12px}
+html,body{height:100%;overflow:hidden;font-family:'SF Pro Display',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+body{display:flex;flex-direction:column}
+
+.mode-bar{display:flex;padding:6px;background:var(--bg2);border-bottom:1px solid var(--bg3);gap:4px}
+.mode-btn{flex:1;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;text-align:center;font-family:inherit;background:transparent;color:var(--tx3);letter-spacing:.3px}
+.mode-btn.on{color:#fff}
+.mode-btn.own-on{background:linear-gradient(135deg,var(--or),var(--am))}
+.mode-btn.sit-on{background:linear-gradient(135deg,var(--gn),#059669)}
+
+.view{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column}
+.view.on{display:flex}
+
+/* OWNER */
+.own-hero{text-align:center;padding:28px 20px 16px;background:linear-gradient(180deg,rgba(249,115,22,.1),transparent)}
+.own-logo{font-size:44px}
+.own-name{font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--or),var(--am));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.own-sub{font-size:12px;color:var(--tx2);margin-top:2px}
+
+/* SOS */
+.sos-wrap{margin:0 16px 16px;text-align:center}
+.sos-btn{width:100%;padding:22px;background:linear-gradient(135deg,var(--rd),#dc2626);border:none;border-radius:16px;color:#fff;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 6px 24px rgba(239,68,68,.3);letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:10px}
+.sos-btn:active{transform:scale(.97)}
+.sos-btn.searching{background:linear-gradient(135deg,var(--am),var(--or));animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)}50%{box-shadow:0 0 0 16px rgba(249,115,22,0)}}
+
+/* SITTER CARDS */
+.sitters{padding:0 16px 20px}
+.sitters-t{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.sit-card{display:flex;align-items:center;padding:14px;background:var(--bg2);border-radius:var(--r);margin-bottom:8px;border:1px solid var(--bg3);gap:12px}
+.sit-card:active{background:var(--bg3)}
+.sit-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
+.sit-info{flex:1}
+.sit-name{font-size:14px;font-weight:700}
+.sit-detail{font-size:11px;color:var(--tx2);margin-top:2px}
+.sit-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.sit-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(249,115,22,.1);color:var(--or)}
+.sit-right{text-align:right;min-width:60px}
+.sit-dist{font-size:13px;font-weight:800;color:var(--or)}
+.sit-price{font-size:11px;color:var(--tx2);margin-top:2px}
+.sit-stars{font-size:11px;color:var(--am)}
+.sit-book{margin-top:4px;padding:6px 12px;background:var(--gn);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.sit-book:active{transform:scale(.95)}
+
+/* SITTER VIEW */
+.sit-hero{text-align:center;padding:24px 20px 16px;background:linear-gradient(180deg,rgba(34,197,94,.1),transparent)}
+.sit-toggle-wrap{margin:0 16px 16px;padding:16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bg3);display:flex;align-items:center;gap:12px}
+.sit-toggle-info{flex:1}
+.sit-toggle-title{font-size:14px;font-weight:800}
+.sit-toggle-sub{font-size:11px;color:var(--tx2);margin-top:2px}
+.toggle{width:56px;height:30px;border-radius:15px;background:var(--bg3);cursor:pointer;position:relative;border:none;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--gn)}
+.toggle-dot{width:24px;height:24px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .3s;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.toggle.on .toggle-dot{left:29px}
+
+.sit-stats{display:flex;gap:8px;padding:0 16px 12px}
+.sit-stat{flex:1;padding:12px;background:var(--bg2);border-radius:var(--r);text-align:center;border:1px solid var(--bg3)}
+.sit-stat-val{font-size:20px;font-weight:900}
+.sit-stat-label{font-size:9px;color:var(--tx2);text-transform:uppercase;margin-top:2px}
+
+/* REQUESTS */
+.req-section{padding:0 16px 20px}
+.req-t{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.req-card{padding:14px;background:var(--bg2);border-radius:var(--r);margin-bottom:8px;border:1px solid var(--bg3)}
+.req-card-top{display:flex;align-items:center;gap:10px}
+.req-card-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--bg3)}
+.req-card-info{flex:1}
+.req-card-name{font-size:13px;font-weight:700}
+.req-card-detail{font-size:11px;color:var(--tx2);margin-top:1px}
+.req-card-time{font-size:10px;color:var(--or);font-weight:700}
+.req-card-dog{display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;font-size:12px}
+.req-card-actions{display:flex;gap:8px;margin-top:10px}
+.req-card-btn{flex:1;padding:12px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.req-card-accept{background:var(--gn);color:#fff}
+.req-card-decline{background:var(--bg3);color:var(--tx2)}
+
+.tst{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--tx);padding:10px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.tst.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="mode-bar">
+<button class="mode-btn own-on on" id="btn-own" onclick="setMode('own')">🐕 PROPRIO</button>
+<button class="mode-btn" id="btn-sit" onclick="setMode('sit')">🤝 SITTER</button>
+</div>
+
+<!-- OWNER VIEW -->
+<div class="view on" id="v-own">
+<div class="own-hero">
+<div class="own-logo">🐕</div>
+<div class="own-name">DogSiter</div>
+<div class="own-sub">Garde last-minute pour ton chien</div>
+</div>
+<div class="sos-wrap">
+<button class="sos-btn" id="sos-btn" onclick="sosClick()">
+<span style="font-size:28px">🆘</span> TROUVER UN SITTER MAINTENANT
+</button>
+</div>
+<div class="sitters" id="sitters-section" style="display:none">
+<div class="sitters-t">🐾 Sitters disponibles a proximite</div>
+<div id="sitters-list"></div>
+</div>
+</div>
+
+<!-- SITTER VIEW -->
+<div class="view" id="v-sit">
+<div class="sit-hero">
+<div style="font-size:36px">🤝</div>
+<div style="font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--gn),#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Mode Sitter</div>
+</div>
+
+<div class="sit-toggle-wrap">
+<div class="sit-toggle-info">
+<div class="sit-toggle-title" id="avail-text">🔴 Non disponible</div>
+<div class="sit-toggle-sub">Active pour recevoir des demandes</div>
+</div>
+<button class="toggle" id="avail-toggle" onclick="toggleAvail()"><div class="toggle-dot"></div></button>
+</div>
+
+<div class="sit-stats">
+<div class="sit-stat"><div class="sit-stat-val" style="color:var(--or)">23</div><div class="sit-stat-label">Gardes</div></div>
+<div class="sit-stat"><div class="sit-stat-val" style="color:var(--am)">4.8 ⭐</div><div class="sit-stat-label">Note</div></div>
+<div class="sit-stat"><div class="sit-stat-val" style="color:var(--gn)">345€</div><div class="sit-stat-label">Gains</div></div>
+</div>
+
+<div class="req-section">
+<div class="req-t">📩 Demandes en attente</div>
+<div id="sit-requests"></div>
+</div>
+</div>
+
+<div class="tst" id="tst"></div>
+
+<script>
+var mode='own';
+var available=false;
+var sosActive=false;
+
+var SITTERS=[
+{name:'Camille D.',dist:'350m',price:'8€/h',stars:'⭐⭐⭐⭐⭐',color:'#f97316',tags:['Verifiee','Jardin'],xp:'42 gardes'},
+{name:'Thomas R.',dist:'600m',price:'7€/h',stars:'⭐⭐⭐⭐',color:'#3b82f6',tags:['Etudiant','Dispo 24h'],xp:'18 gardes'},
+{name:'Sophie M.',dist:'1.2km',price:'10€/h',stars:'⭐⭐⭐⭐⭐',color:'#8b5cf6',tags:['Pro','Grands chiens'],xp:'87 gardes'},
+{name:'Julien P.',dist:'1.5km',price:'6€/h',stars:'⭐⭐⭐⭐',color:'#22c55e',tags:['Retraite','Calme'],xp:'31 gardes'}
+];
+
+var REQUESTS=[
+{name:'Marie L.',dog:'Rex (Labrador, 3 ans)',when:'Aujourd\'hui 14h-18h',dist:'400m',urgent:true},
+{name:'Pierre K.',dog:'Milo (Cavalier KC, 5 ans)',when:'Demain 9h-12h',dist:'800m',urgent:false}
+];
+
+function setMode(m){
+mode=m;
+document.getElementById('v-own').className='view'+(m==='own'?' on':'');
+document.getElementById('v-sit').className='view'+(m==='sit'?' on':'');
+document.getElementById('btn-own').className='mode-btn'+(m==='own'?' own-on on':'');
+document.getElementById('btn-sit').className='mode-btn'+(m==='sit'?' sit-on on':'');
+if(m==='sit')renderRequests();
+}
+
+function sosClick(){
+var btn=document.getElementById('sos-btn');
+if(sosActive){return}
+sosActive=true;
+btn.className='sos-btn searching';
+btn.innerHTML='<span style="font-size:22px">🔍</span> Recherche en cours...';
+setTimeout(function(){
+btn.className='sos-btn';
+btn.innerHTML='<span style="font-size:22px">✅</span> '+SITTERS.length+' sitters trouves !';
+btn.style.background='linear-gradient(135deg,var(--gn),#059669)';
+document.getElementById('sitters-section').style.display='block';
+renderSitters();
+try{navigator.vibrate(200)}catch(e){}
+},2000);
+}
+
+function renderSitters(){
+var h='';
+for(var i=0;i<SITTERS.length;i++){
+var s=SITTERS[i];
+h+='<div class="sit-card">';
+h+='<div class="sit-avatar" style="background:'+s.color+'">'+s.name.charAt(0)+'</div>';
+h+='<div class="sit-info"><div class="sit-name">'+esc(s.name)+'</div>';
+h+='<div class="sit-detail">'+s.xp+' • '+s.stars+'</div>';
+h+='<div class="sit-tags">';
+for(var j=0;j<s.tags.length;j++){h+='<span class="sit-tag">'+s.tags[j]+'</span>'}
+h+='</div></div>';
+h+='<div class="sit-right"><div class="sit-dist">'+s.dist+'</div><div class="sit-price">'+s.price+'</div>';
+h+='<button class="sit-book" onclick="book('+i+')">Reserver</button>';
+h+='</div></div>';
+}
+document.getElementById('sitters-list').innerHTML=h;
+}
+
+function book(i){
+var s=SITTERS[i];
+toast('✅ Demande envoyee a '+s.name+' !');
+try{navigator.vibrate(100)}catch(e){}
+}
+
+function toggleAvail(){
+available=!available;
+var tog=document.getElementById('avail-toggle');
+var txt=document.getElementById('avail-text');
+tog.className='toggle'+(available?' on':'');
+txt.textContent=available?'🟢 Disponible':'🔴 Non disponible';
+if(available)toast('Tu es maintenant visible !');
+else toast('Dispo desactivee');
+}
+
+function renderRequests(){
+var h='';
+for(var i=0;i<REQUESTS.length;i++){
+var r=REQUESTS[i];
+h+='<div class="req-card">';
+h+='<div class="req-card-top">';
+h+='<div class="req-card-avatar">🐕</div>';
+h+='<div class="req-card-info"><div class="req-card-name">'+esc(r.name)+'</div><div class="req-card-detail">'+r.dist+'</div></div>';
+h+='<div class="req-card-time">'+(r.urgent?'🆘 URGENT':'📅 Planifie')+'</div>';
+h+='</div>';
+h+='<div class="req-card-dog">🐾 '+esc(r.dog)+'<br>📅 '+esc(r.when)+'</div>';
+h+='<div class="req-card-actions">';
+h+='<button class="req-card-btn req-card-decline" onclick="declineReq('+i+')">Refuser</button>';
+h+='<button class="req-card-btn req-card-accept" onclick="acceptReq('+i+')">Accepter</button>';
+h+='</div></div>';
+}
+if(!REQUESTS.length)h='<div style="text-align:center;color:var(--tx3);padding:20px;font-size:12px">Aucune demande</div>';
+document.getElementById('sit-requests').innerHTML=h;
+}
+function acceptReq(i){REQUESTS.splice(i,1);toast('✅ Garde acceptee !');renderRequests();try{navigator.vibrate(100)}catch(e){}}
+function declineReq(i){REQUESTS.splice(i,1);toast('Demande refusee');renderRequests()}
+
+function toast(msg){var el=document.getElementById('tst');el.textContent=msg;el.className='tst show';clearTimeout(el._t);el._t=setTimeout(function(){el.className='tst'},2500)}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+
+renderRequests();
+</script>
+</body>
+</html>
