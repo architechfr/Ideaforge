@@ -303,6 +303,23 @@ body{display:flex;flex-direction:column}
 .vt-rate-btn.dim{opacity:.35;cursor:default}
 .vt-rate-value{font-size:24px;font-weight:800;color:var(--yl);min-width:78px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.5px}
 .vt-rate-value.empty{color:var(--tx3);font-size:13px;font-weight:600;letter-spacing:0}
+/* Lot 4 : cartes joueur repliables + 10 criteres */
+.vt-card-collapsible .vt-card-h{cursor:pointer;align-items:center}
+.vt-card-collapsible .vt-card-chevron{font-size:12px;color:var(--tx3);transition:transform .2s;margin-left:6px;flex-shrink:0}
+.vt-card-collapsible.vt-card-open .vt-card-chevron{transform:rotate(180deg);color:var(--gn)}
+.vt-card-body{max-height:0;overflow:hidden;transition:max-height .25s ease-out}
+.vt-card-collapsible.vt-card-open .vt-card-body{max-height:1200px;transition:max-height .35s ease-in;padding-top:8px}
+.vt-criteria{margin-top:12px;border-top:1px dashed var(--bg);padding-top:10px}
+.vt-criteria-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);text-align:center;margin-bottom:8px}
+.vt-crit-row{display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.04);gap:8px}
+.vt-crit-row:last-child{border-bottom:none}
+.vt-crit-label{font-size:12px;color:var(--tx2);flex:1;min-width:0}
+.vt-crit-control{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.vt-crit-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bg);background:var(--bg);color:var(--tx);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:transform .08s, background .15s}
+.vt-crit-btn:active{transform:scale(.9);background:var(--bg3)}
+.vt-crit-btn.dim{opacity:.3;cursor:default}
+.vt-crit-value{font-size:13px;font-weight:700;color:var(--yl);min-width:32px;text-align:center;font-variant-numeric:tabular-nums}
+.vt-crit-value.empty{color:var(--tx3);font-weight:500}
 .vt-clear{margin-top:6px;text-align:center}
 .vt-clear button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
 .vt-clear button:active{background:var(--bg2)}
@@ -1906,6 +1923,8 @@ function renderVoteLive(matchId,votes){
   for(var i=0;i<votes.length;i++){
     var v=votes[i];if(!v.ratings)continue;
     for(var key in v.ratings){
+      // Lot 4 : ignorer les notes critères dans l'agrégation globale (note glob = key sans ":crit:")
+      if(key.indexOf(':crit:')>=0)continue;
       var r=v.ratings[key];
       if(r==='NS'){
         nsCount[key]=(nsCount[key]||0)+1;
@@ -2108,14 +2127,17 @@ function renderVotePage(){
     var ptLine=fmtPlayingTime(pt);
     var subBadge=p.isSub?' <span class="pl-sub-badge">REMPL</span>':'';
 
-    h+='<div class="vt-card">';
-    h+='<div class="vt-card-h">';
+    h+='<div class="vt-card vt-card-collapsible" id="vc-'+safeKey+'">';
+    h+='<div class="vt-card-h" onclick="toggleCardOpen(\''+esc(key)+'\')">';
     h+='<div class="vt-card-name"><span class="pl-num">'+esc(p.num)+'</span>'+subBadge+'</div>';
     h+='<div class="vt-card-rating empty" id="vdh-'+safeKey+'">—</div>';
+    h+='<span class="vt-card-chevron">▼</span>';
     h+='</div>';
     h+='<div class="vt-card-stats">'+statsLine+'</div>';
     if(ptLine)h+=ptLine;
-    // Lot 5 v2 : controle [-][chiffre /10][+] + 5 etoiles indicateur (non cliquables)
+    // Lot 4 : tout ce qui suit est dans le body depliable
+    h+='<div class="vt-card-body">';
+    // Note globale : controle [-][chiffre /10][+] + 5 etoiles indicateur
     h+='<div class="vt-rating-control" data-key="'+esc(key)+'">';
     h+='<button class="vt-rate-btn vt-rate-minus" id="vrm-'+safeKey+'" onclick="adjustRating(\''+esc(key)+'\',-0.5)" aria-label="Baisser de 0,5">−</button>';
     h+='<div class="vt-rate-value empty" id="vd-'+safeKey+'">—/10</div>';
@@ -2129,11 +2151,25 @@ function renderVotePage(){
       h+='</span>';
     }
     h+='</div>';
-    // Lot 5 chantier 2 : 2 boutons "Effacer" + "Pas vu jouer"
+    // Lot 4 : section 10 criteres detailles
+    h+='<div class="vt-criteria">';
+    h+='<div class="vt-criteria-title">10 critères détaillés (départ à 5/10)</div>';
+    for(var ci=0;ci<CRITERES.length;ci++){
+      h+='<div class="vt-crit-row">';
+      h+='<div class="vt-crit-label">'+esc(CRITERES[ci])+'</div>';
+      h+='<div class="vt-crit-control">';
+      h+='<button class="vt-crit-btn" id="vcm-'+safeKey+'-'+ci+'" onclick="adjustCriterion(\''+esc(key)+'\','+ci+',-0.5)" aria-label="Baisser">−</button>';
+      h+='<span class="vt-crit-value empty" id="vcv-'+safeKey+'-'+ci+'">—</span>';
+      h+='<button class="vt-crit-btn" id="vcp-'+safeKey+'-'+ci+'" onclick="adjustCriterion(\''+esc(key)+'\','+ci+',0.5)" aria-label="Monter">+</button>';
+      h+='</div></div>';
+    }
+    h+='</div>';
+    // Boutons "Effacer" + "Pas vu jouer"
     h+='<div class="vt-actions">';
     h+='<button onclick="clearStarRating(\''+esc(key)+'\')">Effacer</button>';
     h+='<button class="vt-ns-btn" onclick="setNotSeenRating(\''+esc(key)+'\')">👁️ Pas vu jouer</button>';
     h+='</div>';
+    h+='</div>'; // fin vt-card-body
     h+='</div>';
   }
 
@@ -2145,6 +2181,9 @@ function renderVotePage(){
 }
 
 var V_RATINGS={};
+// Lot 4 : liste des 10 criteres de notation. MODIFIABLE ICI.
+var CRITERES=['Engagement','Technique','Vision de jeu','Placement','Defense','Attaque','Passes','Finition','Mental','Fair-play'];
+var V_OPEN_KEY=null; // cle de la carte joueur actuellement depliee (une seule a la fois)
 
 // Soumettre le vote dans Firestore
 window.submitVote=async function(){
@@ -2727,8 +2766,91 @@ window.adjustRating=function(key,delta){
   applyStarDisplay(key,n);
   try{if(navigator.vibrate)navigator.vibrate(12)}catch(e){}
 };
+
+// Lot 4 : toggle d'ouverture d'une carte joueur (une seule depliee a la fois)
+window.toggleCardOpen=function(key){
+  var safeKey=key.replace(':','-').replace('#','').replace('R','r');
+  // Refermer la carte precedemment ouverte
+  if(V_OPEN_KEY&&V_OPEN_KEY!==key){
+    var prevSafe=V_OPEN_KEY.replace(':','-').replace('#','').replace('R','r');
+    var prevCard=document.getElementById('vc-'+prevSafe);
+    if(prevCard)prevCard.className='vt-card vt-card-collapsible';
+  }
+  var card=document.getElementById('vc-'+safeKey);
+  if(!card)return;
+  if(V_OPEN_KEY===key){
+    // Replier la carte courante
+    card.className='vt-card vt-card-collapsible';
+    if(V_RATINGS[key]==='NS')card.className+=' ns';
+    V_OPEN_KEY=null;
+  }else{
+    // Ouvrir cette carte
+    card.className='vt-card vt-card-collapsible vt-card-open';
+    if(V_RATINGS[key]==='NS')card.className+=' ns';
+    V_OPEN_KEY=key;
+    // Pre-remplir les criteres a 5 si pas deja saisis (et joueur non NS)
+    if(V_RATINGS[key]!=='NS')prefillCriteriaForKey(key);
+    // Rafraichir l'affichage des criteres
+    for(var ci=0;ci<CRITERES.length;ci++)applyCriterionDisplay(key,ci);
+  }
+};
+
+// Lot 4 : pre-remplit les 10 criteres a 5/10 si pas deja saisis pour ce joueur
+function prefillCriteriaForKey(key){
+  for(var ci=0;ci<CRITERES.length;ci++){
+    var ckey=key+':crit:'+ci;
+    if(typeof V_RATINGS[ckey]!=='number')V_RATINGS[ckey]=5;
+  }
+}
+
+// Lot 4 : ajustement d'un critere par +/- 0.5 (demarre a 5 si pas saisi)
+window.adjustCriterion=function(key,criterionIdx,delta){
+  // Si joueur NS, on ne touche pas
+  if(V_RATINGS[key]==='NS')return;
+  var ckey=key+':crit:'+criterionIdx;
+  var current=V_RATINGS[ckey];
+  var n;
+  if(typeof current!=='number'||current<=0){
+    n=5;
+  }else{
+    n=current+delta;
+  }
+  if(n<0.5){delete V_RATINGS[ckey];applyCriterionDisplay(key,criterionIdx);return}
+  if(n>10)n=10;
+  n=Math.round(n*2)/2;
+  V_RATINGS[ckey]=n;
+  applyCriterionDisplay(key,criterionIdx);
+  try{if(navigator.vibrate)navigator.vibrate(8)}catch(e){}
+};
+
+// Lot 4 : affichage d'un critere (valeur + griser boutons aux limites)
+function applyCriterionDisplay(key,criterionIdx){
+  var safeKey=key.replace(':','-').replace('#','').replace('R','r');
+  var ckey=key+':crit:'+criterionIdx;
+  var n=V_RATINGS[ckey];
+  var span=document.getElementById('vcv-'+safeKey+'-'+criterionIdx);
+  var bm=document.getElementById('vcm-'+safeKey+'-'+criterionIdx);
+  var bp=document.getElementById('vcp-'+safeKey+'-'+criterionIdx);
+  if(span){
+    if(typeof n==='number'&&n>0){
+      span.textContent=n.toFixed(1).replace('.',',');
+      span.className='vt-crit-value';
+    }else{
+      span.textContent='—';
+      span.className='vt-crit-value empty';
+    }
+  }
+  var v=(typeof n==='number')?n:0;
+  if(bm)bm.className='vt-crit-btn'+(v<=0||v<=0.5?' dim':'');
+  if(bp)bp.className='vt-crit-btn'+(v>=10?' dim':'');
+}
 window.clearStarRating=function(key){
   delete V_RATINGS[key];
+  // Lot 4 : effacer aussi tous les criteres de ce joueur
+  for(var ci=0;ci<CRITERES.length;ci++){
+    delete V_RATINGS[key+':crit:'+ci];
+    applyCriterionDisplay(key,ci);
+  }
   applyStarDisplay(key,0);
 };
 function applyStarDisplay(key,val){
@@ -2798,6 +2920,11 @@ function applyStarDisplay(key,val){
 // Lot 5 chantier 2 : marque un joueur comme "Pas vu jouer" (NS = Not Seen)
 window.setNotSeenRating=function(key){
   V_RATINGS[key]='NS';
+  // Lot 4 : effacer les criteres (joueur pas vu = pas de notation detaillee non plus)
+  for(var ci=0;ci<CRITERES.length;ci++){
+    delete V_RATINGS[key+':crit:'+ci];
+    applyCriterionDisplay(key,ci);
+  }
   applyStarDisplay(key,'NS');
   try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
 };
