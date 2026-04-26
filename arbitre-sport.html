@@ -58,7 +58,6 @@ body{display:flex;flex-direction:column}
 .chip.on{border-color:var(--gn);color:var(--gn);background:rgba(34,197,94,.1)}
 .cc{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer}
 .cc.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.2)}
-.cfg-go{margin:24px 0 16px;padding:16px;background:linear-gradient(135deg,var(--gn),var(--gn2));border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:900;cursor:pointer;width:100%}
 .pl-wrap{display:flex;gap:6px;margin-top:4px}
 .pl-in{flex:1;padding:10px;background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;color:var(--tx);font-size:13px;font-family:inherit;outline:none}
 .pl-in:focus{border-color:var(--gn)}
@@ -74,8 +73,29 @@ body{display:flex;flex-direction:column}
 .mt-clocks{text-align:center;padding:8px 0 2px}
 .mt-time-main{font-size:56px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:2px;font-family:'SF Mono',ui-monospace,monospace;line-height:1}
 .mt-time-main.run{color:var(--gn)}.mt-time-main.pau{color:var(--yl)}.mt-time-main.fin{color:var(--rd)}.mt-time-main.at{color:var(--or)}
-.mt-time-real{font-size:12px;color:var(--tx3);font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;font-family:'SF Mono',ui-monospace,monospace}
+.mt-time-real{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;font-family:'SF Mono',ui-monospace,monospace;padding:3px 8px;border-radius:6px;letter-spacing:0.5px;line-height:1;display:inline-flex;align-items:center;gap:4px}
+.mt-time-real::before{content:'⏱';font-size:11px;opacity:0.7}
+.mt-time-real.real-ok{color:var(--gn);background:rgba(34,197,94,0.10)}
+.mt-time-real.real-warn{color:var(--or);background:rgba(249,115,22,0.12)}
+.mt-time-real.real-alert{color:var(--rd);background:rgba(239,68,68,0.15);animation:pulse-real 1.2s ease-in-out infinite}
+@keyframes pulse-real{0%,100%{opacity:1}50%{opacity:0.7}}
+/* Conteneur des chronos : officiel grand au centre, réel petit à droite */
+.mt-clocks{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .mt-at-badge{display:inline-block;padding:2px 8px;background:rgba(249,115,22,.15);color:var(--or);border-radius:8px;font-size:11px;font-weight:800;margin-top:3px}
+#m-at-wrap{flex-basis:100%;text-align:center}
+/* Bandeau mi-temps (Lot 4) */
+.ht-banner{margin:8px 12px 0;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.06));border:1px solid rgba(249,115,22,0.4);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px}
+.ht-banner.warn{background:linear-gradient(135deg,rgba(249,115,22,0.32),rgba(249,115,22,0.10));border-color:rgba(249,115,22,0.7)}
+.ht-banner.alert{background:linear-gradient(135deg,rgba(239,68,68,0.32),rgba(239,68,68,0.12));border-color:rgba(239,68,68,0.7);animation:ht-pulse 0.8s ease-in-out infinite}
+.ht-banner.over{background:linear-gradient(135deg,rgba(239,68,68,0.45),rgba(239,68,68,0.18));border-color:rgba(239,68,68,0.9);animation:ht-pulse 0.5s ease-in-out infinite}
+@keyframes ht-pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.ht-label{font-weight:800;letter-spacing:1px;color:var(--or);font-size:11px}
+.ht-banner.alert .ht-label,.ht-banner.over .ht-label{color:var(--rd)}
+.ht-time{font-family:'SF Mono',ui-monospace,monospace;font-weight:900;font-size:22px;font-variant-numeric:tabular-nums;color:var(--or);letter-spacing:1px}
+.ht-banner.alert .ht-time,.ht-banner.over .ht-time{color:var(--rd)}
+.ht-dur-btns{display:flex;gap:4px}
+.ht-dur-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--tx2);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+.ht-dur-btn.on{background:var(--or);color:#000;border-color:var(--or)}
 .mt-sc{display:flex;align-items:center;justify-content:center;padding:2px 16px 8px;gap:6px}
 .mt-team{flex:1;text-align:center}
 .mt-tn{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;margin:0 auto}
@@ -176,6 +196,112 @@ body{display:flex;flex-direction:column}
 .auth-btn-out:active{background:var(--bg3)}
 .auth-warn{margin-top:6px;font-size:11px;color:var(--yl);line-height:1.3}
 .tst.show{opacity:1}
+
+/* TEAMS — ecran "Mes equipes" (Lot 5) */
+.tm-list{padding:0 16px 16px}
+.tm-card{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.tm-card-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tm-card-c{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.1)}
+.tm-card-n{flex:1;font-size:14px;font-weight:700}
+.tm-card-sport{font-size:11px;color:var(--tx2)}
+.tm-card-pl{font-size:11px;color:var(--tx2);line-height:1.5;background:var(--bg3);padding:8px;border-radius:6px;margin-top:4px}
+.tm-card-actions{display:flex;gap:6px;margin-top:10px}
+.tm-card-btn{flex:1;padding:8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.tm-card-btn.edit{background:var(--bg3);color:var(--tx)}
+.tm-card-btn.edit:active{background:var(--bg)}
+.tm-card-btn.del{background:rgba(239,68,68,0.12);color:var(--rd);border:1px solid rgba(239,68,68,0.2)}
+.tm-card-btn.del:active{background:rgba(239,68,68,0.2)}
+.tm-empty{padding:30px 16px;text-align:center;color:var(--tx3);font-size:13px;line-height:1.5}
+.tm-add-btn{margin:0 16px 16px;padding:14px;background:linear-gradient(135deg,var(--gn),var(--gn2));border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);font-family:inherit}
+.tm-add-btn:active{transform:scale(.97)}
+.tm-intro{padding:14px 20px 4px;font-size:12px;color:var(--tx2);line-height:1.5;text-align:center}
+/* Editeur d'equipe (modale) */
+.tm-ed-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.tm-ed-num{width:32px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--tx2);text-align:right}
+.tm-ed-num.sub{color:var(--pk)}
+.tm-ed-input{flex:1;padding:8px;background:var(--bg);border:1px solid var(--bg3);border-radius:6px;color:var(--tx);font-size:13px;font-family:inherit;outline:none;min-width:0}
+.tm-ed-input:focus{border-color:var(--gn)}
+.tm-ed-sep{font-size:10px;font-weight:700;color:var(--pk);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px;padding:0 2px;border-top:1px dashed var(--bg3);padding-top:8px}
+.tm-ed-sep.first{border-top:none;padding-top:0;margin-top:0;color:var(--gn)}
+
+/* CFG — boutons "Charger / Sauvegarder une equipe" (Lot 5) */
+.cfg-team-actions{display:flex;gap:6px;margin:4px 0 6px}
+.cfg-team-btn{flex:1;padding:9px;background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px}
+.cfg-team-btn:active{background:var(--bg3)}
+.cfg-team-btn.has-loaded{color:var(--gn);border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.05)}
+
+/* PLAYERS — separateur titulaires/remplacants (Lot 5) */
+.pl-sep{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin:8px 2px 2px;display:flex;align-items:center;gap:6px}
+.pl-sep::before,.pl-sep::after{content:'';flex:1;height:1px;background:var(--bg3)}
+.pl-tag.sub{background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.2);color:var(--pk)}
+.pl-tag.sub .pl-tag-x{background:rgba(236,72,153,0.15);color:var(--pk)}
+
+
+/* CFG — duo Prepare / Lancer (Lot 5 chantier 1) */
+.cfg-btns{display:flex;gap:8px;margin:24px 0 16px}
+.cfg-btn-prep{flex:1;padding:14px;background:var(--bg3);border:2px solid var(--bg3);border-radius:14px;color:var(--tx);font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.2}
+.cfg-btn-prep:active{background:var(--bg2);transform:scale(.97)}
+.cfg-btn-prep small{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px}
+.cfg-btn-go{flex:2;padding:14px;background:linear-gradient(135deg,var(--gn),var(--gn2));border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.2;box-shadow:0 4px 14px rgba(34,197,94,.25)}
+.cfg-btn-go:active{transform:scale(.97)}
+.cfg-btn-go small{font-size:9px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px}
+.cfg-edit-banner{margin:8px 0 12px;padding:10px 12px;background:rgba(59,130,246,0.10);border:1px solid rgba(59,130,246,0.35);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--bl)}
+.cfg-edit-banner b{color:var(--tx)}
+.cfg-edit-cancel{margin-left:auto;background:transparent;border:1px solid rgba(59,130,246,0.4);color:var(--bl);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+
+/* HOME — cartes matchs prepares (Lot 5 chantier 1) */
+.prep-sec-t{font-size:11px;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:1.5px;padding:0 20px;margin:14px 0 6px}
+.prep-card{background:linear-gradient(135deg,rgba(59,130,246,0.10),rgba(29,78,216,0.04));border:1px solid rgba(59,130,246,0.30);border-radius:var(--r);padding:12px;margin:0 16px 8px}
+.prep-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.prep-sport{font-size:18px;flex-shrink:0}
+.prep-vs{flex:1;font-size:13px;font-weight:700;min-width:0;line-height:1.3}
+.prep-vs .prep-da{color:var(--tx3);font-weight:400;margin:0 6px}
+.prep-date{font-size:10px;color:var(--tx3);flex-shrink:0;font-weight:600}
+.prep-info{font-size:11px;color:var(--tx2);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap}
+.prep-info span{white-space:nowrap}
+.prep-actions{display:flex;gap:6px}
+.prep-btn{padding:10px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px}
+.prep-btn:active{transform:scale(.96)}
+.prep-launch{flex:1;background:linear-gradient(135deg,var(--gn),var(--gn2));color:#fff;box-shadow:0 2px 8px rgba(34,197,94,.20)}
+.prep-edit{background:var(--bg3);color:var(--tx2);min-width:44px}
+.prep-edit:active{background:var(--bg)}
+.prep-del{background:rgba(239,68,68,0.08);color:var(--rd);min-width:44px;border:1px solid rgba(239,68,68,0.20)}
+.prep-del:active{background:rgba(239,68,68,0.16)}
+
+/* VOTE — Pas vu jouer + temps de jeu (Lot 5 chantier 2) */
+.vt-playtime{font-size:11px;color:var(--tx2);margin-bottom:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.vt-playtime.never{color:var(--tx3);font-style:italic}
+.vt-playtime b{color:var(--tx);font-weight:700;font-variant-numeric:tabular-nums}
+.vt-actions{margin-top:6px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.vt-actions button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:inherit;line-height:1.2}
+.vt-actions button:active{background:var(--bg2)}
+.vt-actions .vt-ns-btn.ns-active{background:rgba(59,130,246,0.10);color:var(--bl);border-color:var(--bl);border-style:solid}
+.vt-card.ns .vt-stars-fg{display:none}
+.vt-card.ns .vt-stars-bg{color:var(--bg2);opacity:0.4}
+.vt-card.ns .vt-stars-zones button{cursor:default}
+.vt-card-rating.ns{color:var(--bl);font-style:italic;font-weight:600;font-size:12px;letter-spacing:0}
+
+/* VOTE — etoiles + resume joueur (Lot 5) */
+.vt-card{background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:8px}
+.vt-card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.vt-card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
+.vt-card-name .pl-num{color:var(--tx);font-weight:800}
+.vt-card-name .pl-sub-badge{font-size:9px;font-weight:700;background:rgba(236,72,153,0.15);color:var(--pk);padding:2px 5px;border-radius:4px;letter-spacing:0.5px}
+.vt-card-rating{font-weight:800;color:var(--yl);font-size:14px;font-variant-numeric:tabular-nums;min-width:42px;text-align:right}
+.vt-card-rating.empty{color:var(--tx3);font-weight:600}
+.vt-card-stats{font-size:11px;color:var(--tx2);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;min-height:14px}
+.vt-card-stats span{white-space:nowrap}
+.vt-card-stats .empty-stat{color:var(--tx3);font-style:italic;font-size:10px}
+.vt-stars-wrap{position:relative;width:220px;height:42px;margin:0 auto;user-select:none;-webkit-user-select:none}
+.vt-stars-bg,.vt-stars-fg{position:absolute;top:0;left:0;font-size:34px;line-height:42px;letter-spacing:6px;pointer-events:none;width:220px;text-align:center}
+.vt-stars-bg{color:var(--bg)}
+.vt-stars-fg{color:#facc15;width:0;overflow:hidden;white-space:nowrap;transition:width .15s;text-shadow:0 0 8px rgba(250,204,21,0.3)}
+.vt-stars-zones{position:absolute;top:0;left:0;width:220px;height:42px;display:flex}
+.vt-stars-zones button{flex:1;background:transparent;border:none;padding:0;height:100%;cursor:pointer;color:transparent;font-size:0;font-family:inherit}
+.vt-stars-zones button:active{background:rgba(250,204,21,0.05)}
+.vt-clear{margin-top:6px;text-align:center}
+.vt-clear button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+.vt-clear button:active{background:var(--bg2)}
 </style>
 </head>
 <body>
@@ -183,25 +309,45 @@ body{display:flex;flex-direction:column}
 <div id="s-home" class="screen on">
 <div class="hdr"><div style="width:44px"></div><div class="hdr-t">⚽ ARBITRE SPORT</div><button class="hdr-btn" id="snd-btn-home" onclick="toggleSnd()" title="Son">🔊</button></div>
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
-<div class="hero"><div class="hero-i">🏟️</div><div class="hero-n">ARBITRE Sport</div><div class="hero-s">Le cockpit de l'arbitre moderne</div></div>
+<div class="hero"><div class="hero-i">🏟️</div><div class="hero-n">ARBITRE Sport</div><div class="hero-s">Arbitres · Entraineurs · Clubs amateurs</div></div>
 
 <div id="rz"></div>
+<div id="rz-prep"></div>
 <button class="btn-big btn-new" onclick="goCfg()">🏟️ NOUVEAU MATCH</button>
+<button class="btn-big" id="btn-teams-home" onclick="goTeams()" style="background:linear-gradient(135deg,var(--bl),#1d4ed8);box-shadow:0 4px 16px rgba(59,130,246,.25);font-size:15px">👥 MES EQUIPES <span id="teams-count" style="font-size:11px;font-weight:700;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:4px"></span></button>
 <div class="sec-t">Derniers matchs</div>
 <div id="hl" style="padding:0 4px 20px"></div>
+</div></div>
+
+<div id="s-teams" class="screen">
+<div class="hdr"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">MES EQUIPES</div><div style="width:44px"></div></div>
+<div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div class="tm-intro">Memorise tes equipes une fois — tu les rechargeras instantanement pour chaque match.</div>
+<button class="tm-add-btn" onclick="newTeamEditor()">➕ Nouvelle equipe</button>
+<div id="tm-list" class="tm-list"></div>
 </div></div>
 
 <div id="s-cfg" class="screen">
 <div class="hdr"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">CONFIGURATION</div><div style="width:44px"></div></div>
 <div class="cfg">
 <div class="cfg-l">Sport</div><div class="cfg-row" id="c-sp"></div>
-<div class="cfg-l">Equipe A</div><input class="cfg-in" id="c-tA" placeholder="Nom equipe A" autocomplete="off">
+<div class="cfg-l">Equipe A</div>
+<div class="cfg-team-actions">
+<button class="cfg-team-btn" id="cfg-load-A" onclick="cfgLoadTeam('A')">📋 Charger</button>
+<button class="cfg-team-btn" id="cfg-save-A" onclick="cfgSaveTeam('A')">💾 Sauvegarder</button>
+</div>
+<input class="cfg-in" id="c-tA" placeholder="Nom equipe A" autocomplete="off">
 <div class="cfg-l" style="margin-top:6px">Couleur</div><div class="cfg-row" id="c-cA"></div>
 <div class="cfg-l" style="margin-top:6px">Joueurs A <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3)">(optionnel — sinon numéros auto selon sport)</span></div>
 <div class="pl-wrap"><input class="pl-in" id="pl-inA" placeholder="Nom ou numero" autocomplete="off" onkeydown="if(event.key==='Enter')addPl('A')"><button class="pl-add" onclick="addPl('A')">+</button><button class="pl-add" style="background:var(--bg3);color:var(--tx2);font-size:11px;padding:10px 12px" onclick="autoPl('A')" title="Generer numeros automatiquement">#1-N</button></div>
 <div class="pl-list" id="pl-A"></div>
 
-<div class="cfg-l">Equipe B</div><input class="cfg-in" id="c-tB" placeholder="Nom equipe B" autocomplete="off">
+<div class="cfg-l">Equipe B</div>
+<div class="cfg-team-actions">
+<button class="cfg-team-btn" id="cfg-load-B" onclick="cfgLoadTeam('B')">📋 Charger</button>
+<button class="cfg-team-btn" id="cfg-save-B" onclick="cfgSaveTeam('B')">💾 Sauvegarder</button>
+</div>
+<input class="cfg-in" id="c-tB" placeholder="Nom equipe B" autocomplete="off">
 <div class="cfg-l" style="margin-top:6px">Couleur</div><div class="cfg-row" id="c-cB"></div>
 <div class="cfg-l" style="margin-top:6px">Joueurs B <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3)">(optionnel — sinon numéros auto selon sport)</span></div>
 <div class="pl-wrap"><input class="pl-in" id="pl-inB" placeholder="Nom ou numero" autocomplete="off" onkeydown="if(event.key==='Enter')addPl('B')"><button class="pl-add" onclick="addPl('B')">+</button><button class="pl-add" style="background:var(--bg3);color:var(--tx2);font-size:11px;padding:10px 12px" onclick="autoPl('B')" title="Generer numeros automatiquement">#1-N</button></div>
@@ -210,12 +356,17 @@ body{display:flex;flex-direction:column}
 <div class="cfg-l">Duree periode (minutes)</div><div class="cfg-row" id="c-du"></div>
 <div class="cfg-l">Nombre de periodes</div><div class="cfg-row" id="c-hs"></div>
 <div class="cfg-l">Alerte avant fin (minutes)</div><div class="cfg-row" id="c-al"></div>
-<button class="cfg-go" onclick="go()">🏟️ COUP D'ENVOI</button>
+<div id="cfg-edit-banner"></div>
+<div class="cfg-btns">
+<button class="cfg-btn-prep" onclick="prepare()" title="Sauvegarder l'effectif sans demarrer le chrono">📝 PREPARER<small>sans demarrer</small></button>
+<button class="cfg-btn-go" onclick="go()" title="Coup d'envoi immediat">🏟️ LANCER<small>coup d'envoi</small></button>
+</div>
 </div></div>
 
 <div id="s-match" class="screen">
 <div class="mt">
 <div class="mt-bar" id="m-bar">PERIODE 1</div>
+<div id="m-ht-banner" style="display:none"></div>
 <div class="mt-clocks">
 <div class="mt-time-main" id="m-clk">00:00</div>
 <div class="mt-time-real" id="m-real">Temps reel : 00:00</div>
@@ -360,7 +511,7 @@ var CO=['#22c55e','#3b82f6','#ef4444','#facc15','#f97316','#8b5cf6','#ec4899','#
 var DU=[5,10,12,15,20,25,30,35,40,45];
 var HS_OPT=[1,2,3,4];
 var AL_OPT=[1,2,2.5,3,5];
-var C={sp:0,cA:'#22c55e',cB:'#3b82f6',hd:15,hs:2,al:2.5,pA:[],pB:[]};
+var C={sp:0,cA:'#22c55e',cB:'#3b82f6',hd:15,hs:2,al:2.5,pA:[],pB:[],tmA:null,tmB:null,editingPreparedId:null};
 var M=null,raf=null,wl=null,asi=null,buz={};
 var deferredInstall=null;
 
@@ -369,7 +520,7 @@ function init(){
   try{var s=localStorage.getItem('arb_snd');if(s==='0')AU.on=false}catch(e){}
   var sb=document.getElementById('snd-btn-home');
   if(sb){sb.textContent=AU.on?'🔊':'🔇';sb.className='hdr-btn'+(AU.on?' on':'')}
-  rSp();rCo();rDu();rHs();rAl();rPl();rHi();
+  rSp();rCo();rDu();rHs();rAl();rPl();rHi();updateTeamsCount();chkPrepared();
 
   // Gestion du paramètre URL ?vote=<matchId> (mode votant)
   if(tryVoteModeFromURL()){
@@ -429,11 +580,11 @@ function tryImportMatchFromURL(){
 
 // NAV
 function sh(id){var s=document.querySelectorAll('.screen');for(var i=0;i<s.length;i++)s[i].className='screen';document.getElementById('s-'+id).className='screen on'}
-function goH(){sh('home');rHi();chkLive();sRaf()}
-function goCfg(){C={sp:0,cA:'#22c55e',cB:'#3b82f6',hd:15,hs:2,al:2.5,pA:[],pB:[]};
+function goH(){sh('home');rHi();chkLive();chkPrepared();updateTeamsCount();sRaf()}
+function goCfg(){C={sp:0,cA:'#22c55e',cB:'#3b82f6',hd:15,hs:2,al:2.5,pA:[],pB:[],tmA:null,tmB:null,editingPreparedId:null};
 var a=document.getElementById('c-tA'),b=document.getElementById('c-tB');a.value='';b.value='';
 document.getElementById('pl-inA').value='';document.getElementById('pl-inB').value='';
-rSp();rCo();rDu();rHs();rAl();rPl();sh('cfg')}
+rSp();rCo();rDu();rHs();rAl();rPl();updateCfgLoadButton('A');updateCfgLoadButton('B');renderEditBanner();sh('cfg')}
 
 // CONFIG RENDERS
 function rSp(){var h='';for(var i=0;i<SP.length;i++){h+='<div class="chip'+(C.sp===i?' on':'')+'" onclick="pSp('+i+')">'+SP[i].ic+' '+SP[i].n+'</div>'}document.getElementById('c-sp').innerHTML=h;C.hd=SP[C.sp].hd;C.hs=SP[C.sp].hs;C.al=SP[C.sp].al;rDu();rHs();rAl()}
@@ -450,28 +601,207 @@ function pAl(v){C.al=v;rAl()}
 // PLAYERS
 function addPl(t){var inp=document.getElementById('pl-in'+t);var n=inp.value.trim();if(!n)return;if(t==='A'){if(C.pA.indexOf(n)<0)C.pA.push(n)}else{if(C.pB.indexOf(n)<0)C.pB.push(n)}inp.value='';rPl();inp.focus()}
 function rmPl(t,i){if(t==='A')C.pA.splice(i,1);else C.pB.splice(i,1);rPl()}
-function autoPl(t){var sp=SP[C.sp];var arr=[];for(var i=1;i<=sp.np;i++)arr.push('#'+i);if(t==='A')C.pA=arr;else C.pB=arr;rPl();toast(sp.np+' numeros generes ('+sp.n+')')}
-function rPl(){var hA='',hB='';for(var i=0;i<C.pA.length;i++){hA+='<div class="pl-tag">'+esc(C.pA[i])+'<button class="pl-tag-x" onclick="rmPl(\'A\','+i+')">×</button></div>'}for(var i=0;i<C.pB.length;i++){hB+='<div class="pl-tag">'+esc(C.pB[i])+'<button class="pl-tag-x" onclick="rmPl(\'B\','+i+')">×</button></div>'}document.getElementById('pl-A').innerHTML=hA;document.getElementById('pl-B').innerHTML=hB}
+function autoPl(t){var sp=SP[C.sp];var arr=genDefaultPlayers(sp);if(t==='A')C.pA=arr;else C.pB=arr;rPl();toast(sp.nt+' titulaires + '+(sp.np-sp.nt)+' remplacants ('+sp.n+')')}
+// Lot 5 : effectif par defaut = sp.nt titulaires (#1..#nt) + (sp.np-sp.nt) remplacants (R1..)
+function genDefaultPlayers(sp){
+if(!sp)sp=SP[0];
+var arr=[],i;
+for(i=1;i<=sp.nt;i++)arr.push('#'+i);
+var nbSubs=sp.np-sp.nt;if(nbSubs<0)nbSubs=0;
+for(i=1;i<=nbSubs;i++)arr.push('R'+i);
+return arr;
+}
+// True si le nom est marque comme remplacant (commence par R suivi d'un chiffre)
+function isSubPlayer(name){
+if(!name)return false;
+return /^R\d/.test(String(name).trim());
+}
+function rPl(){
+document.getElementById('pl-A').innerHTML=renderPlayerList(C.pA,'A');
+document.getElementById('pl-B').innerHTML=renderPlayerList(C.pB,'B');
+}
+// Lot 5 : rendu liste joueurs avec separation titulaires/remplacants
+function renderPlayerList(list,team){
+if(!list||!list.length)return'';
+// Separer titulaires et remplacants
+var titulars=[],subs=[];
+for(var i=0;i<list.length;i++){
+if(isSubPlayer(list[i]))subs.push({n:list[i],idx:i});
+else titulars.push({n:list[i],idx:i});
+}
+var h='';
+function renderTags(arr,isSub){
+var s='';
+for(var j=0;j<arr.length;j++){
+s+='<div class="pl-tag'+(isSub?' sub':'')+'">'+esc(arr[j].n)+'<button class="pl-tag-x" onclick="rmPl(\''+team+'\','+arr[j].idx+')">×</button></div>';
+}
+return s;
+}
+if(titulars.length&&subs.length){
+h+='<div style="width:100%;display:flex;flex-wrap:wrap;gap:5px">'+renderTags(titulars,false)+'</div>';
+h+='<div class="pl-sep" style="width:100%">Remplacants</div>';
+h+='<div style="width:100%;display:flex;flex-wrap:wrap;gap:5px">'+renderTags(subs,true)+'</div>';
+}else{
+h+=renderTags(titulars,false)+renderTags(subs,true);
+}
+return h;
+}
 
 // START MATCH
-function go(){
+// Lot 5 chantier 1 : helper qui construit un match depuis la config courante
+// state = 'prepared' (sauve sans chrono) ou 'live' (demarre direct)
+function buildMatchFromConfig(state){
 audInit();audResume();
 var tA=document.getElementById('c-tA').value.trim()||'Equipe A';
 var tB=document.getElementById('c-tB').value.trim()||'Equipe B';
 var sp=SP[C.sp];
-// Auto-generation des numeros si la liste est vide (selon le sport)
-var defP=[];for(var i=1;i<=sp.np;i++)defP.push('#'+i);
+// Auto-generation des numeros si la liste est vide : titulaires + remplacants (Lot 5)
+var defP=genDefaultPlayers(sp);
 var pA=C.pA.length?C.pA.slice():defP.slice();
 var pB=C.pB.length?C.pB.slice():defP.slice();
-M={id:'m_'+Date.now(),sport:sp.id,si:sp.ic,
+// En mode edition d'un match prepare, on conserve l'id et la date de creation
+var existing=C.editingPreparedId?ld(C.editingPreparedId):null;
+var matchId=existing?existing.id:('m_'+Date.now());
+var matchCa=existing?existing.ca:(new Date().toISOString());
+var m={id:matchId,sport:sp.id,si:sp.ic,
 tA:{n:tA,c:C.cA,p:pA},tB:{n:tB,c:C.cB,p:pB},
-cfg:{hd:C.hd,hs:C.hs,ms:sp.ms,al:C.al,np:sp.np,nt:sp.nt},
-st:'live',ch:1,
-tSt:Date.now(),tOff:0,rSt:Date.now(),
+cfg:{hd:C.hd,hs:C.hs,ms:sp.ms,al:C.al,np:sp.np,nt:sp.nt,htd:15},
+st:state,ch:1,
 sA:0,sB:0,yA:0,yB:0,rA:0,rB:0,uA:0,uB:0,injA:0,injB:0,
 at:0,atSet:false,
-ev:[],ca:new Date().toISOString()};
-sav();sh('match');injectMatchHdr();rM();sRaf();startRaf();reqWL();startAS();vb(100);sndWhistle();goFs()}
+ev:[],ca:matchCa};
+if(state==='live'){
+m.tSt=Date.now();m.tOff=0;m.rSt=Date.now();
+}else{
+// prepared : pas de chrono demarre
+m.tSt=null;m.tOff=0;m.rSt=null;
+}
+return m;
+}
+
+// LANCER : creer un nouveau match en cours et demarrer le chrono
+function go(){
+M=buildMatchFromConfig('live');
+C.editingPreparedId=null;
+sav();sh('match');injectMatchHdr();rM();sRaf();startRaf();reqWL();startAS();vb(100);sndWhistle();goFs();
+}
+
+// PREPARER : sauver l'effectif sans demarrer le chrono (Lot 5 chantier 1)
+function prepare(){
+var m=buildMatchFromConfig('prepared');
+// Sauvegarder dans la liste arb_m (sans toucher a arb_live)
+var all=gAll();
+var idx=-1;
+for(var i=0;i<all.length;i++){if(all[i].id===m.id){idx=i;break}}
+if(idx>=0)all[idx]=m;else all.unshift(m);
+localStorage.setItem('arb_m',JSON.stringify(all));
+C.editingPreparedId=null;
+vb(50);
+toast('📝 Match prepare !');
+goH();
+}
+
+// LANCER UN MATCH PREPARE (depuis la home)
+window.launchPrepared=function(id){
+var m=ld(id);
+if(!m){toast('Introuvable');return}
+audInit();audResume();
+buz={};
+m.st='live';m.tSt=Date.now();m.tOff=0;m.rSt=Date.now();
+M=m;
+sav();sh('match');injectMatchHdr();rM();sRaf();startRaf();reqWL();startAS();vb(100);sndWhistle();goFs();
+};
+
+// MODIFIER UN MATCH PREPARE : recharger la config en mode edition
+window.editPrepared=function(id){
+var m=ld(id);
+if(!m){toast('Introuvable');return}
+var spIdx=0;
+for(var i=0;i<SP.length;i++){if(SP[i].id===m.sport){spIdx=i;break}}
+C={
+sp:spIdx,
+cA:m.tA.c,cB:m.tB.c,
+hd:m.cfg.hd,hs:m.cfg.hs,al:m.cfg.al,
+pA:m.tA.p?m.tA.p.slice():[],
+pB:m.tB.p?m.tB.p.slice():[],
+tmA:null,tmB:null,
+editingPreparedId:id
+};
+document.getElementById('c-tA').value=m.tA.n||'';
+document.getElementById('c-tB').value=m.tB.n||'';
+document.getElementById('pl-inA').value='';
+document.getElementById('pl-inB').value='';
+rSp();rCo();rDu();rHs();rAl();rPl();updateCfgLoadButton('A');updateCfgLoadButton('B');
+renderEditBanner();
+sh('cfg');
+toast('Modification du match prepare');
+};
+
+// SUPPRIMER UN MATCH PREPARE
+window.delPrepared=function(id){
+var m=ld(id);
+if(!m)return;
+confirm2('Supprimer le match prepare\n"'+(m.tA.n||'?')+' vs '+(m.tB.n||'?')+'" ?',function(){
+var all=gAll().filter(function(x){return x.id!==id});
+localStorage.setItem('arb_m',JSON.stringify(all));
+toast('Match prepare supprime');
+chkPrepared();
+});
+};
+
+// Bandeau "Mode edition" en haut de la cfg
+function renderEditBanner(){
+var w=document.getElementById('cfg-edit-banner');
+if(!w)return;
+if(C.editingPreparedId){
+var m=ld(C.editingPreparedId);
+if(m){
+w.innerHTML='<div class="cfg-edit-banner"><span>📝</span><span>Modification de <b>'+esc(m.tA.n||'?')+' vs '+esc(m.tB.n||'?')+'</b></span><button class="cfg-edit-cancel" onclick="cancelEditPrepared()">Annuler</button></div>';
+return;
+}
+}
+w.innerHTML='';
+}
+window.cancelEditPrepared=function(){
+C.editingPreparedId=null;
+renderEditBanner();
+toast('Edition annulee');
+};
+
+// Render section "Matchs prepares" sur la home
+function chkPrepared(){
+var w=document.getElementById('rz-prep');
+if(!w)return;
+var all=gAll().filter(function(m){return m.st==='prepared'});
+if(!all.length){w.innerHTML='';return}
+// Tri par date de creation decroissante (plus recents en haut)
+all.sort(function(a,b){return(b.ca||'').localeCompare(a.ca||'')});
+var h='<div class="prep-sec-t">📝 Matchs prepares ('+all.length+')</div>';
+for(var i=0;i<all.length;i++){
+var m=all[i];
+var sp=SP.find(function(s){return s.id===m.sport})||SP[0];
+var dStr='';
+try{
+var d=new Date(m.ca);
+dStr=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}catch(e){dStr=''}
+var nbA=m.tA.p?m.tA.p.length:0;
+var nbB=m.tB.p?m.tB.p.length:0;
+h+='<div class="prep-card">';
+h+='<div class="prep-head">';
+h+='<span class="prep-sport">'+sp.ic+'</span>';
+h+='<span class="prep-vs"><span style="color:'+m.tA.c+'">'+esc(m.tA.n||'?')+'</span><span class="prep-da">vs</span><span style="color:'+m.tB.c+'">'+esc(m.tB.n||'?')+'</span></span>';
+h+='<span class="prep-date">'+esc(dStr)+'</span>';
+h+='</div>';
+h+='<div class="prep-info"><span>⏱️ '+m.cfg.hs+'×'+m.cfg.hd+' min</span><span>👥 '+nbA+' / '+nbB+'</span></div>';
+h+='<div class="prep-actions">';
+h+='<button class="prep-btn prep-launch" onclick="launchPrepared(\''+m.id+'\')">▶️ Lancer</button>';
+h+='<button class="prep-btn prep-edit" onclick="editPrepared(\''+m.id+'\')" title="Modifier">✏️</button>';
+h+='<button class="prep-btn prep-del" onclick="delPrepared(\''+m.id+'\')" title="Supprimer">🗑️</button>';
+h+='</div></div>';
+}
+w.innerHTML=h;
+}
 
 function injectMatchHdr(){
   // Inject sound toggle in match screen if not yet done
@@ -502,7 +832,20 @@ else if(M.atSet)cls+=' at';
 else cls+=' run';
 el.className=cls}
 var re=document.getElementById('m-real');
-if(re)re.textContent='Temps reel : '+fT(gReal());
+if(re){
+  var realMs=gReal();
+  re.textContent=fT(realMs);
+  // Couleur selon le décalage entre temps réel et temps officiel CUMULÉ
+  // (le matchMs ne compte que la période courante, on doit ajouter les périodes passées)
+  var officialCumul=(M.ch-1)*M.cfg.hd*60000+matchMs;
+  var diffMs=realMs-officialCumul;
+  var cls='mt-time-real';
+  if(M.st==='finished')cls+=' real-ok';
+  else if(diffMs>=180000)cls+=' real-alert';
+  else if(diffMs>=60000)cls+=' real-warn';
+  else cls+=' real-ok';
+  re.className=cls;
+}
 var aw=document.getElementById('m-at-wrap');
 if(aw){
 if(M.atSet&&M.at>0){
@@ -512,6 +855,8 @@ var remaining=halfMs+atMs-matchMs;
 if(remaining<0)remaining=0;
 aw.innerHTML='<div class="mt-at-badge">+'+M.at+' AT — reste '+fT(remaining)+'</div>';
 }else{aw.innerHTML=''}}
+// Lot 4 : bandeau mi-temps (compte à rebours configurable + alertes)
+chkHalftime();
 chkAlerts(matchMs);
 raf=requestAnimationFrame(tk)}tk()}
 function sRaf(){if(raf){cancelAnimationFrame(raf);raf=null}}
@@ -534,6 +879,82 @@ var totalMs=hdMs+M.at*1000;
 if(matchMs>=totalMs&&!buz[k3]){buz[k3]=true;vb(700);sndBuzzer();toast('🏁 Fin du temps additionnel !')}
 }
 }
+
+// ============================================================
+// LOT 4 : chrono mi-temps avec compte à rebours et alertes
+// ============================================================
+function chkHalftime(){
+  var bn=document.getElementById('m-ht-banner');
+  if(!bn||!M)return;
+  // Si pas en mi-temps (pas de htStart) → on cache le bandeau
+  if(!M.htStart||M.st==='live'||M.st==='finished'){
+    if(bn.style.display!=='none')bn.style.display='none';
+    return;
+  }
+  var dur=(M.htDur||15)*60*1000;
+  var elapsed=Date.now()-M.htStart;
+  var remaining=dur-elapsed;  // peut devenir négatif après les 15 min
+  // Format MM:SS, prefix - si négatif
+  var absMs=Math.abs(remaining);
+  var sign=remaining<0?'-':'';
+  var label=remaining<0?'TEMPS DÉPASSÉ':'MI-TEMPS — REPRISE DANS';
+  // Détermination de la phase visuelle
+  var cls='ht-banner';
+  if(remaining<=0)cls+=' over';
+  else if(remaining<=150000)cls+=' alert';   // T-2:30
+  else if(remaining<=300000)cls+=' warn';     // T-5:00
+  // Construction du contenu
+  var dur5=M.htDur===5?' on':'';
+  var dur10=M.htDur===10?' on':'';
+  var dur15=M.htDur===15?' on':'';
+  bn.className=cls;
+  bn.style.display='flex';
+  bn.innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:140px">'+
+      '<span class="ht-label">'+label+'</span>'+
+      '<span class="ht-time">'+sign+fT(absMs)+'</span>'+
+    '</div>'+
+    '<div class="ht-dur-btns">'+
+      '<button class="ht-dur-btn'+dur5+'" onclick="setHtDur(5)">5</button>'+
+      '<button class="ht-dur-btn'+dur10+'" onclick="setHtDur(10)">10</button>'+
+      '<button class="ht-dur-btn'+dur15+'" onclick="setHtDur(15)">15</button>'+
+    '</div>';
+  // Déclenchement des alertes
+  if(!M.htAlerts)M.htAlerts={};
+  // T-5:00 → simple sifflet + vibration courte
+  if(remaining<=300000&&remaining>290000&&!M.htAlerts.k5){
+    M.htAlerts.k5=true;vb(300);sndWhistle();toast('⏰ Reprise dans 5 min');
+  }
+  // T-2:30 → double sifflet + vibration intense
+  if(remaining<=150000&&remaining>140000&&!M.htAlerts.k2_5){
+    M.htAlerts.k2_5=true;vb([200,100,200]);
+    sndWhistle();setTimeout(function(){sndWhistle()},250);
+    toast('⚠️ Reprise dans 2:30 — préparez-vous !');
+  }
+  // T-0:00 → sifflet long + vibration + buzzer
+  if(remaining<=0&&remaining>-1000&&!M.htAlerts.k0){
+    M.htAlerts.k0=true;vb([500,150,500,150,500]);
+    sndBuzzer();
+    setTimeout(function(){sndWhistle()},150);
+    setTimeout(function(){sndWhistle()},500);
+    toast('🏁 La mi-temps est terminée !');
+  }
+}
+
+// Modifie la durée mi-temps en cours ou pour la prochaine
+window.setHtDur=function(d){
+  if(!M)return;
+  M.cfg.htd=d;
+  // Si on est en mi-temps actuellement, on relance le compte à rebours
+  if(M.htStart){
+    M.htDur=d;
+    // On garde le htStart inchangé pour ne pas tricher : si on a déjà
+    // attendu 8 min et qu'on passe à 10 min, il reste 2 min
+    M.htAlerts={};
+  }
+  toast('Mi-temps : '+d+' min');
+  sav();
+};
 
 function promptAT(){
 var mc=document.getElementById('mo-c');
@@ -558,7 +979,11 @@ sav();rM();
 // PAUSE
 function pp(){if(!M)return;
 if(M.st==='live'){M.tOff+=Date.now()-M.tSt;M.st='paused';sndWhistle()}
-else if(M.st==='paused'){M.tSt=Date.now();M.st='live';sndWhistle()}
+else if(M.st==='paused'){
+  M.tSt=Date.now();M.st='live';sndWhistle();
+  // Lot 4 : à la reprise, on efface le chrono mi-temps (le bandeau disparaît)
+  if(M.htStart){M.htStart=null;M.htDur=null;M.htAlerts={}}
+}
 rM();sav()}
 
 // PLAYER PICKER
@@ -655,7 +1080,17 @@ if(M.st==='live'){M.tOff+=Date.now()-M.tSt}
 M.ev.push({tp:'half',t:'',mn:gMinOff(),pl:'',ts:Date.now()});
 M.ch++;M.tOff=0;M.st='paused';M.tSt=Date.now();
 M.atSet=false;M.at=0;
-vb(300);sndWhistle();toast('Periode '+M.ch+'/'+M.cfg.hs);rM();sav()
+// Lot 4 : démarre le chrono mi-temps UNIQUEMENT entre 1ère et 2e période
+// (M.ch vient d'être incrémenté, donc M.ch===2 = on entre dans la 2e période)
+if(M.ch===2){
+  M.htStart=Date.now();
+  M.htDur=M.cfg.htd||15;
+  M.htAlerts={};  // mémorise les alertes déjà déclenchées (k5min, k2min30, k0)
+  vb(300);sndWhistle();toast('Mi-temps — Reprise dans '+M.htDur+' min');
+}else{
+  vb(300);sndWhistle();toast('Periode '+M.ch+'/'+M.cfg.hs);
+}
+rM();sav()
 }else{confirm2('Coup de sifflet final ?',function(){endM()})}}
 function endM(){
 if(M.st==='live'){M.tOff+=Date.now()-M.tSt}
@@ -1209,14 +1644,11 @@ window.voteUpload=async function(id){
     // Nettoyer le match : Firestore refuse les undefined, on les remplace par des valeurs par défaut
     function clean(v,def){return v===undefined||v===null?def:v}
     function cleanTeam(t){
-      if(!t)return{n:'',c:'#888',p:genDefaultPlayers()};
-      // Si pas d'effectif renseigné (cas le plus fréquent dans l'app actuelle),
-      // on génère 16 joueurs par défaut (#1 à #16 = 11 titulaires + 5 remplaçants)
-      var players=Array.isArray(t.p)&&t.p.length?t.p:genDefaultPlayers();
+      // Lot 5 : utilise le helper global (titulaires + remplacants selon sport)
+      var sp=SP.find(function(s){return s.id===m.sport})||SP[0];
+      if(!t)return{n:'',c:'#888',p:genDefaultPlayers(sp)};
+      var players=Array.isArray(t.p)&&t.p.length?t.p:genDefaultPlayers(sp);
       return{n:clean(t.n,''),c:clean(t.c,'#888'),p:players};
-    }
-    function genDefaultPlayers(){
-      var arr=[];for(var i=1;i<=16;i++)arr.push('#'+i);return arr;
     }
     function cleanEvent(e){
       if(!e)return null;
@@ -1397,39 +1829,71 @@ function renderVoteLive(matchId,votes){
     return;
   }
 
-  // Agrégation : pour chaque "key" (équipe:numéro), calculer moyenne et nb votes
-  var stats={}; // {key: {sum, count, label, team}}
+  // Agregation : pour chaque "key" (equipe:numero), calculer moyenne et nb votes
+  // Lot 5 chantier 2 : 'NS' (Pas vu jouer) n'entre pas dans la moyenne mais est compte a part
+  var stats={};
+  var nsCount={};
   for(var i=0;i<votes.length;i++){
     var v=votes[i];if(!v.ratings)continue;
     for(var key in v.ratings){
       var r=v.ratings[key];
+      if(r==='NS'){
+        nsCount[key]=(nsCount[key]||0)+1;
+        continue;
+      }
       if(typeof r!=='number')continue;
-      if(!stats[key])stats[key]={sum:0,count:0,key:key};
+      if(!stats[key])stats[key]={sum:0,count:0,key:key,ns:0};
       stats[key].sum+=r;stats[key].count++;
     }
   }
-  // Tri par moyenne décroissante
-  var arr=[];for(var k in stats){var s=stats[k];s.avg=s.sum/s.count;arr.push(s)}
-  arr.sort(function(a,b){return b.avg-a.avg});
+  // Reporter le nombre de NS dans stats[key].ns (meme si 0 vote numerique)
+  for(var nk in nsCount){
+    if(!stats[nk])stats[nk]={sum:0,count:0,key:nk,ns:nsCount[nk]};
+    else stats[nk].ns=nsCount[nk];
+  }
+  // Tri par moyenne decroissante (les joueurs avec count=0 — que des NS — vont en fin)
+  var arr=[];
+  for(var k in stats){
+    var s=stats[k];
+    s.avg=s.count>0?(s.sum/s.count):0;
+    arr.push(s);
+  }
+  arr.sort(function(a,b){
+    if(a.count===0&&b.count!==0)return 1;
+    if(b.count===0&&a.count!==0)return-1;
+    return b.avg-a.avg;
+  });
 
-  // Trouve l'homme du match (min 1 vote pour calculer immédiatement, comme demandé)
-  var motm=arr.length?arr[0]:null;
+  // Lot 5 chantier 2 : l'homme du match doit avoir au moins 1 vote numerique (pas que des NS)
+  var motm=null;
+  for(var ai=0;ai<arr.length;ai++){if(arr[ai].count>0){motm=arr[ai];break}}
 
-  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-  h+='<span style="font-size:12px;color:var(--tx2)">🗳️ <b>'+votes.length+'</b> vote'+(votes.length>1?'s':'')+'</span>';
+  // Compter le total de NS pour l'affichage
+  var totalNS=0;
+  for(var k in nsCount)totalNS+=nsCount[k];
+
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">';
+  h+='<span style="font-size:12px;color:var(--tx2)">🗳️ <b>'+votes.length+'</b> vote'+(votes.length>1?'s':'');
+  if(totalNS>0)h+=' <span style="color:var(--bl);font-size:10px">· '+totalNS+' « pas vu »</span>';
+  h+='</span>';
   if(motm){
     var p=motm.key.split(':'),tn=p[0]==='A'?m.tA.n:m.tB.n;
     h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+motm.avg.toFixed(1)+'/10</span>';
   }
   h+='</div>';
 
-  // Top 5 joueurs
+  // Top 5 joueurs (uniquement ceux avec au moins 1 vote numerique)
   h+='<div style="border-top:1px solid var(--bg3);padding-top:6px">';
-  for(var i=0;i<Math.min(5,arr.length);i++){
-    var s=arr[i],pp=s.key.split(':'),tnn=pp[0]==='A'?m.tA.n:m.tB.n,col=pp[0]==='A'?m.tA.c:m.tB.c;
+  var shown=0;
+  for(var i=0;i<arr.length&&shown<5;i++){
+    var s=arr[i];
+    if(s.count===0)continue;  // que des NS, pas affiche dans le top
+    shown++;
+    var pp=s.key.split(':'),tnn=pp[0]==='A'?m.tA.n:m.tB.n,col=pp[0]==='A'?m.tA.c:m.tB.c;
+    var nsLabel=s.ns?' <span style="color:var(--bl);font-size:9px">('+s.ns+' NS)</span>':'';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">';
     h+='<span><span style="color:'+col+';font-weight:600">'+esc(pp[1])+'</span> <span style="color:var(--tx3);font-size:10px">'+esc(tnn)+'</span></span>';
-    h+='<span style="font-weight:700;color:var(--tx)">'+s.avg.toFixed(1)+' <span style="color:var(--tx3);font-size:10px;font-weight:400">('+s.count+'×)</span></span>';
+    h+='<span style="font-weight:700;color:var(--tx)">'+s.avg.toFixed(1)+' <span style="color:var(--tx3);font-size:10px;font-weight:400">('+s.count+'×)</span>'+nsLabel+'</span>';
     h+='</div>';
   }
   h+='</div>';
@@ -1510,37 +1974,32 @@ function renderVotePage(){
     return;
   }
 
-  // Construire la liste des joueurs notables
+  // Construire la liste des joueurs notables (Lot 5 : helper global + plus de stats)
   var votableTeams=m.votableTeams||['A','B'];
   var allPlayers=[];
-  function defaultPlayers(){var a=[];for(var i=1;i<=16;i++)a.push('#'+i);return a}
+  var spVote=SP.find(function(s){return s.id===m.sport})||SP[0];
   for(var ti=0;ti<votableTeams.length;ti++){
     var t=votableTeams[ti],ti_obj=t==='A'?m.tA:m.tB;
-    // Si l'effectif n'a pas été défini, on prend 16 joueurs par défaut (#1 à #16)
-    var pl=(ti_obj.p&&ti_obj.p.length)?ti_obj.p:defaultPlayers();
+    var pl=(ti_obj.p&&ti_obj.p.length)?ti_obj.p:genDefaultPlayers(spVote);
     for(var pi=0;pi<pl.length;pi++){
-      allPlayers.push({team:t,num:pl[pi],teamName:ti_obj.n,color:ti_obj.c});
+      allPlayers.push({team:t,num:pl[pi],teamName:ti_obj.n,color:ti_obj.c,isSub:isSubPlayer(pl[pi])});
     }
   }
 
-  // Charger les notes existantes du votant
+  // Charger les notes existantes du votant (Lot 5 : etoiles)
   V_RATINGS={};
   var FB=window.FB,db=window.FB_DB;
   FB.getDoc(FB.doc(db,'matches',V_MATCHID,'votes',u.uid)).then(function(s){
     if(s.exists()){
       var d=s.data();V_RATINGS=d.ratings||{};
-      // Re-render pour afficher les valeurs déjà saisies
-      var sliders=document.querySelectorAll('.vt-slider');
-      for(var i=0;i<sliders.length;i++){
-        var k=sliders[i].dataset.key;
-        if(V_RATINGS[k]!==undefined){
-          sliders[i].value=V_RATINGS[k];
-          var disp=document.getElementById('vd-'+k.replace(':','-').replace('#',''));
-          if(disp)disp.textContent=Number(V_RATINGS[k]).toFixed(1);
+      // Restaurer l'affichage etoile pour chaque note existante
+      for(var k in V_RATINGS){
+        if(V_RATINGS.hasOwnProperty(k)){
+          applyStarDisplay(k,V_RATINGS[k]);
         }
       }
       var sb=document.getElementById('vt-submit');
-      if(sb)sb.textContent='💾 Mettre à jour mes notes';
+      if(sb)sb.textContent='💾 Mettre a jour mes notes';
     }
   }).catch(function(){});
 
@@ -1550,24 +2009,56 @@ function renderVotePage(){
   h+='<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:4px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>';
   h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0 à 10</div>';
 
-  // Joueurs groupés par équipe
+  // Joueurs groupes par equipe — Lot 5 : etoiles + resume statistiques
+  // Pre-calcul des stats par joueur depuis m.ev pour ne parcourir qu'une fois
+  var playerStats=computePlayerStats(m);
   var lastTeam='';
+  var lastWasTitular=null;
   for(var i=0;i<allPlayers.length;i++){
     var p=allPlayers[i];
     if(p.team!==lastTeam){
       h+='<div style="font-weight:700;color:'+p.color+';margin:14px 0 8px;font-size:13px">'+esc(p.teamName)+'</div>';
       lastTeam=p.team;
+      lastWasTitular=null;
     }
+    // Separateur visuel quand on passe des titulaires aux remplacants
+    if(lastWasTitular===false && !p.isSub){
+      // (cas peu probable : remplacants avant titulaires) — skip
+    }else if(lastWasTitular===true && p.isSub){
+      h+='<div style="font-size:10px;font-weight:700;color:var(--pk);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px;text-align:center">— Remplacants —</div>';
+    }
+    lastWasTitular=!p.isSub;
+
     var key=p.team+':'+p.num;
-    var safeKey=key.replace(':','-').replace('#','');
-    h+='<div style="background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:6px">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    h+='<span style="font-weight:600">'+esc(p.num)+'</span>';
-    h+='<span id="vd-'+safeKey+'" style="font-weight:700;color:var(--gn)">5.0</span>';
+    var safeKey=key.replace(':','-').replace('#','').replace('R','r');
+    var statsKey=p.team+':'+p.num;
+    var statsLine=fmtPlayerStats(playerStats[statsKey]);
+    // Lot 5 chantier 2 : temps de jeu calcule depuis les events sub
+    var pt=computePlayerPlayingTime(statsKey,m);
+    var ptLine=fmtPlayingTime(pt);
+    var subBadge=p.isSub?' <span class="pl-sub-badge">REMPL</span>':'';
+
+    h+='<div class="vt-card">';
+    h+='<div class="vt-card-h">';
+    h+='<div class="vt-card-name"><span class="pl-num">'+esc(p.num)+'</span>'+subBadge+'</div>';
+    h+='<div class="vt-card-rating empty" id="vd-'+safeKey+'">—</div>';
     h+='</div>';
-    h+='<input type="range" class="vt-slider" data-key="'+esc(key)+'" min="0" max="10" step="0.5" value="5" '+
-       'oninput="document.getElementById(\'vd-'+safeKey+'\').textContent=parseFloat(this.value).toFixed(1);V_RATINGS[\''+esc(key)+'\']=parseFloat(this.value)" '+
-       'style="width:100%">';
+    h+='<div class="vt-card-stats">'+statsLine+'</div>';
+    if(ptLine)h+=ptLine;
+    // 5 etoiles avec 10 zones tactiles invisibles (granularite 1/10)
+    h+='<div class="vt-stars-wrap" data-key="'+esc(key)+'">';
+    h+='<div class="vt-stars-bg">★★★★★</div>';
+    h+='<div class="vt-stars-fg" id="vf-'+safeKey+'">★★★★★</div>';
+    h+='<div class="vt-stars-zones">';
+    for(var v=1;v<=10;v++){
+      h+='<button onclick="setStarRating(\''+esc(key)+'\','+v+')" aria-label="'+v+'/10">'+v+'</button>';
+    }
+    h+='</div></div>';
+    // Lot 5 chantier 2 : 2 boutons "Effacer" + "Pas vu jouer"
+    h+='<div class="vt-actions">';
+    h+='<button onclick="clearStarRating(\''+esc(key)+'\')">Effacer</button>';
+    h+='<button class="vt-ns-btn" onclick="setNotSeenRating(\''+esc(key)+'\')">👁️ Pas vu jouer</button>';
+    h+='</div>';
     h+='</div>';
   }
 
@@ -1662,7 +2153,7 @@ function del(id){confirm2('Supprimer ce match ?',function(){var a=gAll();a=a.fil
 function sav(){if(!M)return;var a=gAll(),idx=-1;for(var i=0;i<a.length;i++){if(a[i].id===M.id){idx=i;break}}if(idx>=0)a[idx]=M;else a.unshift(M);localStorage.setItem('arb_m',JSON.stringify(a));if(M.st!=='finished')localStorage.setItem('arb_live',M.id);else localStorage.removeItem('arb_live')}
 function gAll(){try{return JSON.parse(localStorage.getItem('arb_m'))||[]}catch(e){return[]}}
 function ld(id){var a=gAll();for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i]}return null}
-function chkLive(){var li=localStorage.getItem('arb_live'),w=document.getElementById('rz');if(li){var m=ld(li);if(m&&m.st!=='finished'){w.innerHTML='<button class="btn-big btn-res" onclick="res(\''+li+'\')">🔴 REPRENDRE : '+esc(m.tA.n)+' '+m.sA+'-'+m.sB+' '+esc(m.tB.n)+'</button>';return}}w.innerHTML=''}
+function chkLive(){var li=localStorage.getItem('arb_live'),w=document.getElementById('rz');if(li){var m=ld(li);if(m&&m.st!=='finished'&&m.st!=='prepared'){w.innerHTML='<button class="btn-big btn-res" onclick="res(\''+li+'\')">🔴 REPRENDRE : '+esc(m.tA.n)+' '+m.sA+'-'+m.sB+' '+esc(m.tB.n)+'</button>';return}}w.innerHTML=''}
 function res(id){M=ld(id);if(!M){toast('Introuvable');return}buz={};audInit();audResume();sh('match');injectMatchHdr();rM();startRaf();if(M.st==='live')reqWL();startAS();goFs()}
 function startAS(){stopAS();asi=setInterval(function(){if(M)sav()},10000)}
 function stopAS(){if(asi){clearInterval(asi);asi=null}}
@@ -1674,6 +2165,515 @@ var h='';for(var i=0;i<Math.min(a.length,20);i++){var m=a[i];var sp=SP.find(func
 var d=new Date(m.ca).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
 h+='<div class="hi" onclick="showFi(\''+m.id+'\')"><div class="hi-i">'+sp.ic+'</div><div class="hi-info"><div class="hi-team">'+esc(m.tA.n)+' vs '+esc(m.tB.n)+'</div><div class="hi-date">'+d+'</div></div><div class="hi-sc">'+m.sA+' - '+m.sB+'</div></div>'}
 document.getElementById('hl').innerHTML=h}
+
+
+// ============================================================
+// LOT 5 : SYSTEME "MES EQUIPES" — persistance localStorage
+// ============================================================
+// Cle de stockage : arb_teams
+// Format : [{id, name, sport, color, players:[16 strings], createdAt, updatedAt}]
+function gAllTeams(){
+  try{return JSON.parse(localStorage.getItem('arb_teams'))||[]}catch(e){return[]}
+}
+function saveTeamData(team){
+  var all=gAllTeams();
+  if(!team.id)team.id='t_'+Date.now()+'_'+Math.floor(Math.random()*1000);
+  var now=new Date().toISOString();
+  team.updatedAt=now;
+  // Lot 5 : preserve le createdAt existant lors d'une mise a jour, meme si l'appelant ne le passe pas
+  if(!team.createdAt){
+    var existing=null;
+    for(var i=0;i<all.length;i++){if(all[i].id===team.id){existing=all[i];break}}
+    team.createdAt=existing&&existing.createdAt?existing.createdAt:now;
+  }
+  var idx=-1;
+  for(var i=0;i<all.length;i++){if(all[i].id===team.id){idx=i;break}}
+  if(idx>=0)all[idx]=team;else all.unshift(team);
+  localStorage.setItem('arb_teams',JSON.stringify(all));
+  return team;
+}
+function delTeamData(id){
+  var all=gAllTeams().filter(function(t){return t.id!==id});
+  localStorage.setItem('arb_teams',JSON.stringify(all));
+}
+function ldTeam(id){
+  var all=gAllTeams();
+  for(var i=0;i<all.length;i++){if(all[i].id===id)return all[i]}
+  return null;
+}
+function teamsForSport(sportId){
+  return gAllTeams().filter(function(t){return !t.sport||t.sport===sportId});
+}
+
+// Navigation vers l'ecran Mes equipes
+function goTeams(){sh('teams');rTeams()}
+
+// Render de la liste des equipes
+function rTeams(){
+  var el=document.getElementById('tm-list');
+  if(!el)return;
+  var all=gAllTeams();
+  if(!all.length){
+    el.innerHTML='<div class="tm-empty">Aucune equipe enregistree.<br>Cree ta premiere equipe pour la rappeler en un tap a chaque match.</div>';
+    return;
+  }
+  var h='';
+  for(var i=0;i<all.length;i++){
+    var t=all[i];
+    var sp=SP.find(function(s){return s.id===t.sport})||SP[0];
+    var nbT=0,nbS=0;
+    if(t.players){
+      for(var j=0;j<t.players.length;j++){
+        if(isSubPlayer(t.players[j]))nbS++;else nbT++;
+      }
+    }
+    h+='<div class="tm-card">';
+    h+='<div class="tm-card-h">';
+    h+='<div class="tm-card-c" style="background:'+(t.color||'#888')+'"></div>';
+    h+='<div class="tm-card-n">'+esc(t.name||'(Sans nom)')+'</div>';
+    h+='<div class="tm-card-sport">'+sp.ic+' '+nbT+'+'+nbS+'</div>';
+    h+='</div>';
+    if(t.players&&t.players.length){
+      h+='<div class="tm-card-pl">'+t.players.map(esc).join(' · ')+'</div>';
+    }
+    h+='<div class="tm-card-actions">';
+    h+='<button class="tm-card-btn edit" onclick="editTeamEditor(\''+t.id+'\')">✏️ Modifier</button>';
+    h+='<button class="tm-card-btn del" onclick="delTeamConfirm(\''+t.id+'\')">🗑️ Supprimer</button>';
+    h+='</div>';
+    h+='</div>';
+  }
+  el.innerHTML=h;
+}
+
+// Met a jour le compteur d'equipes affiche sur la home
+function updateTeamsCount(){
+  var el=document.getElementById('teams-count');
+  if(!el)return;
+  var n=gAllTeams().length;
+  el.textContent=n>0?n:'';
+  el.style.display=n>0?'inline-block':'none';
+}
+
+// Editeur d'equipe (modale plein-format)
+var TM_EDIT={};
+function newTeamEditor(){
+  var sp=SP[0]; // football par defaut
+  TM_EDIT={
+    id:null,
+    name:'',
+    sport:sp.id,
+    color:CO[0],
+    players:genDefaultPlayers(sp)
+  };
+  showTeamEditor();
+}
+window.editTeamEditor=function(id){
+  var t=ldTeam(id);
+  if(!t){toast('Equipe introuvable');return}
+  var sp=SP.find(function(s){return s.id===t.sport})||SP[0];
+  // Si l'effectif n'est pas a la bonne taille, on complete
+  var players=t.players?t.players.slice():genDefaultPlayers(sp);
+  while(players.length<sp.np){
+    var idx=players.filter(function(p){return !isSubPlayer(p)}).length;
+    if(idx<sp.nt)players.push('#'+(idx+1));
+    else players.push('R'+(players.length-sp.nt+1));
+  }
+  TM_EDIT={
+    id:t.id,
+    name:t.name||'',
+    sport:t.sport||sp.id,
+    color:t.color||CO[0],
+    players:players
+  };
+  showTeamEditor();
+};
+window.delTeamConfirm=function(id){
+  var t=ldTeam(id);
+  if(!t)return;
+  confirm2('Supprimer "'+(t.name||'cette equipe')+'" ?',function(){
+    delTeamData(id);
+    toast('Equipe supprimee');
+    rTeams();updateTeamsCount();
+  });
+};
+
+function showTeamEditor(){
+  var sp=SP.find(function(s){return s.id===TM_EDIT.sport})||SP[0];
+  var h='<div class="mo-t">'+(TM_EDIT.id?'✏️ Modifier l\'equipe':'➕ Nouvelle equipe')+'</div>';
+
+  // Nom
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Nom du club</label>';
+  h+='<input type="text" id="tm-ed-name" class="cfg-in" value="'+esc(TM_EDIT.name)+'" placeholder="ex: FC Ferrieres">';
+  h+='</div>';
+
+  // Sport
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Sport</label>';
+  h+='<div class="cfg-row" id="tm-ed-sport">';
+  for(var i=0;i<SP.length;i++){
+    h+='<div class="chip'+(SP[i].id===TM_EDIT.sport?' on':'')+'" onclick="tmEdSetSport(\''+SP[i].id+'\')">'+SP[i].ic+' '+SP[i].n+'</div>';
+  }
+  h+='</div></div>';
+
+  // Couleur
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Couleur</label>';
+  h+='<div class="cfg-row" id="tm-ed-color">';
+  for(var i=0;i<CO.length;i++){
+    h+='<div class="cc'+(CO[i]===TM_EDIT.color?' on':'')+'" style="background:'+CO[i]+'" onclick="tmEdSetColor(\''+CO[i]+'\')"></div>';
+  }
+  h+='</div></div>';
+
+  // Joueurs
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Effectif ('+sp.nt+' titulaires + '+(sp.np-sp.nt)+' remplacants)</label>';
+  h+='<div id="tm-ed-players">';
+  // Titulaires
+  h+='<div class="tm-ed-sep first">Titulaires</div>';
+  for(var i=0;i<sp.nt;i++){
+    var n=TM_EDIT.players[i]||('#'+(i+1));
+    h+='<div class="tm-ed-row"><div class="tm-ed-num">#'+(i+1)+'</div>';
+    h+='<input type="text" class="tm-ed-input" id="tm-pl-'+i+'" value="'+esc(n)+'" placeholder="ex: #'+(i+1)+' Martin"></div>';
+  }
+  // Remplacants
+  var nbSubs=sp.np-sp.nt;
+  if(nbSubs>0){
+    h+='<div class="tm-ed-sep">Remplacants</div>';
+    for(var i=0;i<nbSubs;i++){
+      var idx=sp.nt+i;
+      var n=TM_EDIT.players[idx]||('R'+(i+1));
+      h+='<div class="tm-ed-row"><div class="tm-ed-num sub">R'+(i+1)+'</div>';
+      h+='<input type="text" class="tm-ed-input" id="tm-pl-'+idx+'" value="'+esc(n)+'" placeholder="ex: R'+(i+1)+' Dupont"></div>';
+    }
+  }
+  h+='</div></div>';
+
+  // Boutons
+  h+='<div style="display:flex;gap:8px;margin-top:14px">';
+  h+='<button class="mo-btn mo-c" onclick="clMo()">Annuler</button>';
+  h+='<button class="mo-btn mo-ok" style="flex:1" onclick="saveTeamFromEditor()">💾 '+(TM_EDIT.id?'Mettre a jour':'Enregistrer')+'</button>';
+  h+='</div>';
+
+  showMo(h);
+}
+window.tmEdSetSport=function(id){
+  // Sauvegarder les saisies en cours dans TM_EDIT.players (pour ne pas perdre les noms)
+  collectTeamEditorPlayers();
+  TM_EDIT.sport=id;
+  // Ajuster la taille du tableau
+  var sp=SP.find(function(s){return s.id===id})||SP[0];
+  var oldP=TM_EDIT.players||[];
+  var newP=genDefaultPlayers(sp);
+  // Conserver les noms qui se trouvent au meme index si presents
+  for(var i=0;i<newP.length&&i<oldP.length;i++){
+    if(oldP[i]&&oldP[i].trim())newP[i]=oldP[i];
+  }
+  TM_EDIT.players=newP;
+  showTeamEditor();
+};
+window.tmEdSetColor=function(c){
+  collectTeamEditorPlayers();
+  TM_EDIT.color=c;
+  showTeamEditor();
+};
+function collectTeamEditorPlayers(){
+  var sp=SP.find(function(s){return s.id===TM_EDIT.sport})||SP[0];
+  var players=[];
+  for(var i=0;i<sp.np;i++){
+    var inp=document.getElementById('tm-pl-'+i);
+    var v=inp?inp.value.trim():'';
+    if(!v){
+      // Numero par defaut selon position
+      if(i<sp.nt)v='#'+(i+1);
+      else v='R'+(i-sp.nt+1);
+    }
+    players.push(v);
+  }
+  TM_EDIT.players=players;
+  var nameInp=document.getElementById('tm-ed-name');
+  if(nameInp)TM_EDIT.name=nameInp.value.trim();
+}
+window.saveTeamFromEditor=function(){
+  collectTeamEditorPlayers();
+  if(!TM_EDIT.name){toast('Nom de club requis');return}
+  saveTeamData({
+    id:TM_EDIT.id,
+    name:TM_EDIT.name,
+    sport:TM_EDIT.sport,
+    color:TM_EDIT.color,
+    players:TM_EDIT.players,
+    createdAt:TM_EDIT.id?(ldTeam(TM_EDIT.id)||{}).createdAt:null
+  });
+  clMo();
+  toast('✅ Equipe enregistree');
+  rTeams();updateTeamsCount();
+};
+
+// CFG : charger une equipe depuis Mes equipes
+window.cfgLoadTeam=function(side){
+  var sp=SP[C.sp];
+  var teams=teamsForSport(sp.id);
+  if(!teams.length){
+    confirm2('Aucune equipe '+sp.n+' enregistree. Aller a Mes equipes ?',function(){goTeams()});
+    return;
+  }
+  var h='<div class="mo-t">📋 Charger une equipe ('+sp.n+')</div>';
+  h+='<div class="pk-grid" style="flex-direction:column">';
+  for(var i=0;i<teams.length;i++){
+    var t=teams[i];
+    var nbT=0,nbS=0;
+    if(t.players){for(var j=0;j<t.players.length;j++){if(isSubPlayer(t.players[j]))nbS++;else nbT++}}
+    h+='<button class="pk-btn" style="text-align:left;display:flex;align-items:center;gap:10px;width:100%;justify-content:flex-start" onclick="cfgApplyTeam(\''+side+'\',\''+t.id+'\')">';
+    h+='<span class="tm-card-c" style="background:'+(t.color||'#888')+'"></span>';
+    h+='<span style="flex:1">'+esc(t.name)+'</span>';
+    h+='<span style="font-size:10px;color:var(--tx3)">'+nbT+'+'+nbS+'</span>';
+    h+='</button>';
+  }
+  h+='</div>';
+  h+='<button class="pk-skip" onclick="clMo()">Annuler</button>';
+  showMo(h);
+};
+window.cfgApplyTeam=function(side,teamId){
+  var t=ldTeam(teamId);
+  if(!t){toast('Introuvable');return}
+  // Met le nom dans l'input
+  var inp=document.getElementById('c-t'+side);
+  if(inp)inp.value=t.name||'';
+  // Met la couleur
+  if(t.color){
+    if(side==='A')C.cA=t.color;else C.cB=t.color;
+  }
+  // Met les joueurs (copie defensive)
+  var players=t.players?t.players.slice():[];
+  if(side==='A')C.pA=players;else C.pB=players;
+  // Memorise l'origine pour le bouton "Sauvegarder" (mode mise a jour)
+  if(side==='A')C.tmA=teamId;else C.tmB=teamId;
+  rCo();rPl();updateCfgLoadButton(side);
+  clMo();
+  toast('📋 '+(t.name||'Equipe')+' chargee');
+};
+function updateCfgLoadButton(side){
+  var btn=document.getElementById('cfg-load-'+side);
+  if(!btn)return;
+  var teamId=side==='A'?C.tmA:C.tmB;
+  if(teamId){
+    var t=ldTeam(teamId);
+    btn.textContent='📋 '+(t?(t.name.length>14?t.name.substring(0,12)+'…':t.name):'Charger');
+    btn.className='cfg-team-btn has-loaded';
+  }else{
+    btn.textContent='📋 Charger';
+    btn.className='cfg-team-btn';
+  }
+}
+// CFG : sauvegarder l'equipe en cours (cree ou met a jour)
+window.cfgSaveTeam=function(side){
+  var name=(document.getElementById('c-t'+side).value||'').trim();
+  if(!name){toast('Saisis d\'abord le nom');return}
+  var players=side==='A'?C.pA.slice():C.pB.slice();
+  if(!players.length){
+    var sp=SP[C.sp];players=genDefaultPlayers(sp);
+  }
+  var color=side==='A'?C.cA:C.cB;
+  var existingId=side==='A'?C.tmA:C.tmB;
+  // Si une equipe meme nom (et meme sport) existe deja, proposer mise a jour
+  var sp=SP[C.sp];
+  if(!existingId){
+    var teams=teamsForSport(sp.id);
+    for(var i=0;i<teams.length;i++){
+      if(teams[i].name.toLowerCase()===name.toLowerCase()){existingId=teams[i].id;break}
+    }
+  }
+  var label=existingId?'Mettre a jour "'+name+'" ?':'Enregistrer "'+name+'" dans Mes equipes ?';
+  confirm2(label,function(){
+    var saved=saveTeamData({
+      id:existingId,
+      name:name,
+      sport:sp.id,
+      color:color,
+      players:players,
+      createdAt:existingId?(ldTeam(existingId)||{}).createdAt:null
+    });
+    if(side==='A')C.tmA=saved.id;else C.tmB=saved.id;
+    updateCfgLoadButton(side);
+    updateTeamsCount();
+    toast('✅ Equipe sauvegardee');
+  });
+};
+
+// ============================================================
+// LOT 5 : CALCUL DES STATS PAR JOUEUR (resume sur page votant)
+// ============================================================
+// Retourne {key: {goals, assists, yellow, red}} ou key = "team:#num"
+function computePlayerStats(m){
+  var out={};
+  if(!m||!m.ev)return out;
+  function inc(key,field){
+    if(!key)return;
+    if(!out[key])out[key]={goals:0,assists:0,yellow:0,red:0};
+    out[key][field]++;
+  }
+  for(var i=0;i<m.ev.length;i++){
+    var e=m.ev[i];
+    if(e.tp==='goal'){
+      var sc=e.scorer;
+      if(!sc&&e.pl){var mt=e.pl.match(/^(.+?)(?:\s*\(p\.|$)/);if(mt)sc=mt[1].trim()}
+      if(sc)inc(e.t+':'+sc.trim(),'goals');
+      var pa=e.passer;
+      if(!pa&&e.pl){var mt2=e.pl.match(/\(p\.\s*(.+?)\)/);if(mt2)pa=mt2[1].trim()}
+      if(pa)inc(e.t+':'+pa.trim(),'assists');
+    }else if(e.tp==='yellow'&&e.pl){
+      inc(e.t+':'+e.pl.trim(),'yellow');
+    }else if(e.tp==='red'&&e.pl){
+      inc(e.t+':'+e.pl.trim(),'red');
+    }
+  }
+  return out;
+}
+// Formate les stats d'un joueur en HTML (utilise sur la page votant)
+function fmtPlayerStats(s){
+  if(!s||(!s.goals&&!s.assists&&!s.yellow&&!s.red)){
+    return '<span class="empty-stat">Pas d\'action enregistree</span>';
+  }
+  var parts=[];
+  if(s.goals)parts.push('<span style="color:var(--gn)">⚽ '+s.goals+(s.goals>1?' buts':' but')+'</span>');
+  if(s.assists)parts.push('<span style="color:var(--bl)">👟 '+s.assists+(s.assists>1?' passes':' passe')+'</span>');
+  if(s.yellow)parts.push('<span style="color:var(--yl)">🟨 '+s.yellow+'</span>');
+  if(s.red)parts.push('<span style="color:var(--rd)">🟥 '+s.red+'</span>');
+  return parts.join('<span style="color:var(--tx3)">·</span>');
+}
+
+
+// ============================================================
+// LOT 5 CHANTIER 2 : TEMPS DE JEU PAR JOUEUR
+// ============================================================
+// Calcule le temps de jeu d'un joueur a partir des events sub.
+// playerKey = "A:#9 Bertrand" (team:nom-tel-qu-il-apparait-dans-l-effectif)
+// Retourne {played, entryMin, exitMin, neverPlayed, isStarter}
+function computePlayerPlayingTime(playerKey,m){
+  var parts=playerKey.split(':');
+  var team=parts[0];
+  var playerName=parts[1];
+  var matchEnd=(m.cfg&&m.cfg.hd&&m.cfg.hs)?m.cfg.hd*m.cfg.hs:90;
+  // Si le match n'est pas termine, on plafonne au temps ecoule officiel
+  // (mais on prend matchEnd par defaut pour les matchs termines)
+  var isStarter=!isSubPlayer(playerName);
+  var onField=isStarter;
+  var lastEntryMin=isStarter?0:null;
+  var firstEntryMin=isStarter?0:null;
+  var lastExitMin=null;
+  var totalPlayed=0;
+  var touched=false;
+  // Trier les events sub par minute
+  var subs=[];
+  if(m.ev&&m.ev.length){
+    for(var i=0;i<m.ev.length;i++){
+      if(m.ev[i].tp==='sub'&&m.ev[i].t===team)subs.push(m.ev[i]);
+    }
+    subs.sort(function(a,b){return(a.mn||0)-(b.mn||0)});
+  }
+  for(var j=0;j<subs.length;j++){
+    var e=subs[j];
+    var mn=e.mn||0;
+    if(e.out===playerName&&onField){
+      totalPlayed+=mn-(lastEntryMin||0);
+      lastExitMin=mn;
+      onField=false;
+      touched=true;
+    }else if(e.inn===playerName&&!onField){
+      lastEntryMin=mn;
+      if(firstEntryMin===null)firstEntryMin=mn;
+      onField=true;
+      touched=true;
+    }
+  }
+  // Si le joueur termine sur le terrain, ajouter le temps depuis sa derniere entree
+  if(onField&&lastEntryMin!==null){
+    totalPlayed+=matchEnd-lastEntryMin;
+  }
+  if(totalPlayed<0)totalPlayed=0;
+  return{
+    played:totalPlayed,
+    entryMin:firstEntryMin,
+    exitMin:lastExitMin,
+    neverPlayed:!isStarter&&!touched,
+    isStarter:isStarter
+  };
+}
+// Formate le temps de jeu pour l'affichage
+function fmtPlayingTime(pt){
+  if(!pt)return'';
+  if(pt.neverPlayed){
+    return '<span class="vt-playtime never">Non entre</span>';
+  }
+  if(pt.played===0){
+    return '<span class="vt-playtime never">0 min</span>';
+  }
+  var s='<span class="vt-playtime">⏱️ <b>'+pt.played+' min</b>';
+  var details=[];
+  if(pt.entryMin!==null&&pt.entryMin>0)details.push('entre '+pt.entryMin+"'");
+  if(pt.exitMin!==null)details.push('sorti '+pt.exitMin+"'");
+  if(details.length)s+=' <span style="color:var(--tx3)">('+details.join(', ')+')</span>';
+  s+='</span>';
+  return s;
+}
+
+// ============================================================
+// LOT 5 : ETOILES VOTE (remplace slider)
+// ============================================================
+// val attendu : 0..10, 0 = efface (pas de note)
+window.setStarRating=function(key,val){
+  if(typeof val!=='number')val=parseFloat(val)||0;
+  if(val<=0){clearStarRating(key);return}
+  if(val>10)val=10;
+  V_RATINGS[key]=val;
+  applyStarDisplay(key,val);
+  // Mini retour haptique
+  try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
+};
+window.clearStarRating=function(key){
+  delete V_RATINGS[key];
+  applyStarDisplay(key,0);
+};
+function applyStarDisplay(key,val){
+  var safeKey=key.replace(':','-').replace('#','').replace('R','r');
+  var fg=document.getElementById('vf-'+safeKey);
+  var lbl=document.getElementById('vd-'+safeKey);
+  // Trouver la carte du joueur (pour ajouter/retirer la classe .ns)
+  var wrap=document.querySelector('.vt-stars-wrap[data-key="'+key+'"]');
+  var card=wrap&&wrap.parentNode?wrap.parentNode:null;
+  // Le bouton "Pas vu jouer" pour cette carte
+  var nsBtn=card?card.querySelector('.vt-ns-btn'):null;
+
+  if(val==='NS'){
+    // Mode "Pas vu jouer"
+    if(fg)fg.style.width='0%';
+    if(lbl){lbl.textContent='Pas vu jouer';lbl.className='vt-card-rating ns'}
+    if(card)card.className='vt-card ns';
+    if(nsBtn)nsBtn.className='vt-ns-btn ns-active';
+    return;
+  }
+  // Mode normal : note numerique ou 0 (efface)
+  if(card)card.className='vt-card';
+  if(nsBtn)nsBtn.className='vt-ns-btn';
+  var n=typeof val==='number'?val:parseFloat(val)||0;
+  if(fg)fg.style.width=(n*10)+'%';
+  if(lbl){
+    if(n>0){
+      lbl.textContent=n.toFixed(1)+'/10';
+      lbl.className='vt-card-rating';
+    }else{
+      lbl.textContent='—';
+      lbl.className='vt-card-rating empty';
+    }
+  }
+}
+// Lot 5 chantier 2 : marque un joueur comme "Pas vu jouer" (NS = Not Seen)
+window.setNotSeenRating=function(key){
+  V_RATINGS[key]='NS';
+  applyStarDisplay(key,'NS');
+  try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
+};
 
 // MODAL
 function confirm2(msg,cb){var mc=document.getElementById('mo-c');mc.innerHTML='<div class="mo-t">'+msg+'</div><div class="mo-btns"><button class="mo-btn mo-c" onclick="clMo()">Annuler</button><button class="mo-btn mo-ok" id="mo-ok">Confirmer</button></div>';document.getElementById('mo-bg').className='mo-bg show';document.getElementById('mo-ok').onclick=function(){clMo();cb()}}
