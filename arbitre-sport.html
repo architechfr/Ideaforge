@@ -276,9 +276,9 @@ body{display:flex;flex-direction:column}
 .vt-actions button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:inherit;line-height:1.2}
 .vt-actions button:active{background:var(--bg2)}
 .vt-actions .vt-ns-btn.ns-active{background:rgba(59,130,246,0.10);color:var(--bl);border-color:var(--bl);border-style:solid}
-.vt-card.ns .vt-stars-fg{display:none}
-.vt-card.ns .vt-stars-bg{color:var(--bg2);opacity:0.4}
-.vt-card.ns .vt-stars-zones button{cursor:default}
+.vt-card.ns .vt-star-cell .star-fg{display:none}
+.vt-card.ns .vt-star-cell .star-bg{color:var(--bg2);opacity:0.4}
+.vt-card.ns .vt-stars-touch button{cursor:default}
 .vt-card-rating.ns{color:var(--bl);font-style:italic;font-weight:600;font-size:12px;letter-spacing:0}
 
 /* VOTE — etoiles + resume joueur (Lot 5) */
@@ -292,13 +292,13 @@ body{display:flex;flex-direction:column}
 .vt-card-stats{font-size:11px;color:var(--tx2);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;min-height:14px}
 .vt-card-stats span{white-space:nowrap}
 .vt-card-stats .empty-stat{color:var(--tx3);font-style:italic;font-size:10px}
-.vt-stars-wrap{position:relative;width:240px;height:42px;margin:0 auto;user-select:none;-webkit-user-select:none}
-.vt-stars-bg,.vt-stars-fg{position:absolute;top:0;left:0;font-size:34px;line-height:42px;letter-spacing:6px;pointer-events:none;width:240px;text-align:center;white-space:nowrap}
-.vt-stars-bg{color:var(--bg)}
-.vt-stars-fg{color:#facc15;width:0;overflow:hidden;white-space:nowrap;transition:width .15s;text-shadow:0 0 8px rgba(250,204,21,0.3)}
-.vt-stars-zones{position:absolute;top:0;left:0;width:240px;height:42px;display:flex}
-.vt-stars-zones button{flex:1;background:transparent;border:none;padding:0;height:100%;cursor:pointer;color:transparent;font-size:0;font-family:inherit}
-.vt-stars-zones button:active{background:rgba(250,204,21,0.05)}
+.vt-stars-wrap{display:flex;justify-content:center;gap:4px;margin:0 auto;width:fit-content;user-select:none;-webkit-user-select:none;position:relative}
+.vt-star-cell{position:relative;width:36px;height:36px;font-size:32px;line-height:36px;text-align:center;display:inline-block}
+.vt-star-cell .star-bg{color:var(--bg);position:absolute;top:0;left:0;right:0;bottom:0;width:100%}
+.vt-star-cell .star-fg{color:#facc15;position:absolute;top:0;left:0;width:0;overflow:hidden;text-shadow:0 0 6px rgba(250,204,21,0.4);transition:width .12s}
+.vt-stars-touch{display:flex;position:absolute;top:0;left:0;right:0;bottom:0;z-index:2}
+.vt-stars-touch button{flex:1;background:transparent;border:none;padding:0;cursor:pointer;color:transparent;font-size:0;font-family:inherit;height:100%}
+.vt-stars-touch button:active{background:rgba(250,204,21,0.08)}
 .vt-clear{margin-top:6px;text-align:center}
 .vt-clear button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
 .vt-clear button:active{background:var(--bg2)}
@@ -1944,7 +1944,7 @@ function renderVoteLive(matchId,votes){
   h+='</span>';
   if(motm){
     var p=motm.key.split(':'),tn=p[0]==='A'?m.tA.n:m.tB.n;
-    h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+motm.avg.toFixed(1)+'/10</span>';
+    h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+(motm.avg/2).toFixed(1).replace('.',',')+'/5</span>';
   }
   h+='</div>';
 
@@ -1959,7 +1959,7 @@ function renderVoteLive(matchId,votes){
     var nsLabel=s.ns?' <span style="color:var(--bl);font-size:9px">('+s.ns+' NS)</span>':'';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">';
     h+='<span><span style="color:'+col+';font-weight:600">'+esc(pp[1])+'</span> <span style="color:var(--tx3);font-size:10px">'+esc(tnn)+'</span></span>';
-    h+='<span style="font-weight:700;color:var(--tx)">'+s.avg.toFixed(1)+' <span style="color:var(--tx3);font-size:10px;font-weight:400">('+s.count+'×)</span>'+nsLabel+'</span>';
+    h+='<span style="font-weight:700;color:var(--tx)">'+(s.avg/2).toFixed(1).replace('.',',')+' <span style="color:var(--tx3);font-size:10px;font-weight:400">/5 ('+s.count+'×)</span>'+nsLabel+'</span>';
     h+='</div>';
   }
   h+='</div>';
@@ -2073,7 +2073,7 @@ function renderVotePage(){
   h+='<div class="hdr" style="position:sticky;top:0;z-index:5"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">🗳️ MES NOTES</div><div style="width:44px"></div></div>';
   h+='<div style="padding:14px">';
   h+='<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:4px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>';
-  h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0 à 10</div>';
+  h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0,5 à 5 étoiles (par demi-étoile)</div>';
 
   // Joueurs groupes par equipe — Lot 5 : etoiles + resume statistiques
   // Pre-calcul des stats par joueur depuis m.ev pour ne parcourir qu'une fois
@@ -2111,13 +2111,17 @@ function renderVotePage(){
     h+='</div>';
     h+='<div class="vt-card-stats">'+statsLine+'</div>';
     if(ptLine)h+=ptLine;
-    // 5 etoiles avec 10 zones tactiles invisibles (granularite 1/10)
+    // Lot 5 chantier 3 : 5 cellules d'etoile independantes (flex) + 10 zones tactiles (granularite 0.5)
     h+='<div class="vt-stars-wrap" data-key="'+esc(key)+'">';
-    h+='<div class="vt-stars-bg">★★★★★</div>';
-    h+='<div class="vt-stars-fg" id="vf-'+safeKey+'">★★★★★</div>';
-    h+='<div class="vt-stars-zones">';
+    for(var s=1;s<=5;s++){
+      h+='<span class="vt-star-cell">';
+      h+='<span class="star-bg">★</span>';
+      h+='<span class="star-fg" id="vsf-'+safeKey+'-'+s+'">★</span>';
+      h+='</span>';
+    }
+    h+='<div class="vt-stars-touch">';
     for(var v=1;v<=10;v++){
-      h+='<button onclick="setStarRating(\''+esc(key)+'\','+v+')" aria-label="'+v+'/10">'+v+'</button>';
+      h+='<button onclick="setStarRating(\''+esc(key)+'\','+v+')" aria-label="'+(v/2).toFixed(1).replace('.',',')+'/5"></button>';
     }
     h+='</div></div>';
     // Lot 5 chantier 2 : 2 boutons "Effacer" + "Pas vu jouer"
@@ -2703,7 +2707,6 @@ window.clearStarRating=function(key){
 };
 function applyStarDisplay(key,val){
   var safeKey=key.replace(':','-').replace('#','').replace('R','r');
-  var fg=document.getElementById('vf-'+safeKey);
   var lbl=document.getElementById('vd-'+safeKey);
   // Trouver la carte du joueur (pour ajouter/retirer la classe .ns)
   var wrap=document.querySelector('.vt-stars-wrap[data-key="'+key+'"]');
@@ -2711,22 +2714,35 @@ function applyStarDisplay(key,val){
   // Le bouton "Pas vu jouer" pour cette carte
   var nsBtn=card?card.querySelector('.vt-ns-btn'):null;
 
+  // Helper : remplit chaque etoile selon la note (en /5 par 0.5)
+  function fillStars(n5){
+    for(var i=1;i<=5;i++){
+      var fg=document.getElementById('vsf-'+safeKey+'-'+i);
+      if(!fg)continue;
+      var diff=n5-(i-1);
+      if(diff>=1)fg.style.width='100%';
+      else if(diff>=0.5)fg.style.width='50%';
+      else fg.style.width='0%';
+    }
+  }
+
   if(val==='NS'){
     // Mode "Pas vu jouer"
-    if(fg)fg.style.width='0%';
+    fillStars(0);
     if(lbl){lbl.textContent='Pas vu jouer';lbl.className='vt-card-rating ns'}
     if(card)card.className='vt-card ns';
     if(nsBtn)nsBtn.className='vt-ns-btn ns-active';
     return;
   }
-  // Mode normal : note numerique ou 0 (efface)
+  // Mode normal : note interne en /10, affichage en /5
   if(card)card.className='vt-card';
   if(nsBtn)nsBtn.className='vt-ns-btn';
-  var n=typeof val==='number'?val:parseFloat(val)||0;
-  if(fg)fg.style.width=(n*10)+'%';
+  var n10=typeof val==='number'?val:parseFloat(val)||0;
+  var n5=n10/2;
+  fillStars(n5);
   if(lbl){
-    if(n>0){
-      lbl.textContent=n.toFixed(1)+'/10';
+    if(n10>0){
+      lbl.textContent=n5.toFixed(1).replace('.',',')+'/5';
       lbl.className='vt-card-rating';
     }else{
       lbl.textContent='—';
