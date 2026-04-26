@@ -940,8 +940,14 @@ window.voteUpload=async function(id){
     // Nettoyer le match : Firestore refuse les undefined, on les remplace par des valeurs par défaut
     function clean(v,def){return v===undefined||v===null?def:v}
     function cleanTeam(t){
-      if(!t)return{n:'',c:'#888',p:[]};
-      return{n:clean(t.n,''),c:clean(t.c,'#888'),p:Array.isArray(t.p)?t.p:[]};
+      if(!t)return{n:'',c:'#888',p:genDefaultPlayers()};
+      // Si pas d'effectif renseigné (cas le plus fréquent dans l'app actuelle),
+      // on génère 16 joueurs par défaut (#1 à #16 = 11 titulaires + 5 remplaçants)
+      var players=Array.isArray(t.p)&&t.p.length?t.p:genDefaultPlayers();
+      return{n:clean(t.n,''),c:clean(t.c,'#888'),p:players};
+    }
+    function genDefaultPlayers(){
+      var arr=[];for(var i=1;i<=16;i++)arr.push('#'+i);return arr;
     }
     function cleanEvent(e){
       if(!e)return null;
@@ -992,10 +998,16 @@ window.voteUpload=async function(id){
     console.log('[Firestore] Upload OK');
 
     // Stocke l'état localement pour ne pas réuploader
+    // Note : sav() sauve M (match en cours), or ici m est un match terminé
+    // Donc on sauve directement dans la liste arb_m
     m.voteOpen=true;
     m.voteClosesAt=closesAt;
     m.votableTeams=votableTeams;
-    sav();
+    var allMatches=gAll();
+    for(var k=0;k<allMatches.length;k++){
+      if(allMatches[k].id===m.id){allMatches[k]=m;break}
+    }
+    localStorage.setItem('arb_m',JSON.stringify(allMatches));
 
     clMo();
     toast('✅ Votes ouverts !');
@@ -1232,12 +1244,13 @@ function renderVotePage(){
   // Construire la liste des joueurs notables
   var votableTeams=m.votableTeams||['A','B'];
   var allPlayers=[];
+  function defaultPlayers(){var a=[];for(var i=1;i<=16;i++)a.push('#'+i);return a}
   for(var ti=0;ti<votableTeams.length;ti++){
     var t=votableTeams[ti],ti_obj=t==='A'?m.tA:m.tB;
-    if(ti_obj.p&&ti_obj.p.length){
-      for(var pi=0;pi<ti_obj.p.length;pi++){
-        allPlayers.push({team:t,num:ti_obj.p[pi],teamName:ti_obj.n,color:ti_obj.c});
-      }
+    // Si l'effectif n'a pas été défini, on prend 16 joueurs par défaut (#1 à #16)
+    var pl=(ti_obj.p&&ti_obj.p.length)?ti_obj.p:defaultPlayers();
+    for(var pi=0;pi<pl.length;pi++){
+      allPlayers.push({team:t,num:pl[pi],teamName:ti_obj.n,color:ti_obj.c});
     }
   }
 
