@@ -936,24 +936,60 @@ window.voteUpload=async function(id){
   try{
     var now=Date.now();
     var closesAt=now+48*60*60*1000; // +48h
+
+    // Nettoyer le match : Firestore refuse les undefined, on les remplace par des valeurs par défaut
+    function clean(v,def){return v===undefined||v===null?def:v}
+    function cleanTeam(t){
+      if(!t)return{n:'',c:'#888',p:[]};
+      return{n:clean(t.n,''),c:clean(t.c,'#888'),p:Array.isArray(t.p)?t.p:[]};
+    }
+    function cleanEvent(e){
+      if(!e)return null;
+      var ev={
+        tp:clean(e.tp,''),
+        t:clean(e.t,''),
+        mn:clean(e.mn,0),
+        ts:clean(e.ts,0)
+      };
+      // Champs optionnels, ajoutés seulement s'ils existent
+      if(e.pl!==undefined)ev.pl=e.pl;
+      if(e.scorer!==undefined)ev.scorer=e.scorer;
+      if(e.passer!==undefined)ev.passer=e.passer;
+      if(e.out!==undefined)ev.out=e.out;
+      if(e.inn!==undefined)ev.inn=e.inn;
+      return ev;
+    }
+    var cleanedEv=(m.ev||[]).map(cleanEvent).filter(function(e){return e!==null});
+    var cleanedCfg=m.cfg?{
+      hd:clean(m.cfg.hd,45),
+      hs:clean(m.cfg.hs,2),
+      ms:clean(m.cfg.ms,5),
+      al:clean(m.cfg.al,2.5)
+    }:{hd:45,hs:2,ms:5,al:2.5};
+
     var matchDoc={
       id:m.id,
-      sport:m.sport,
-      tA:m.tA, tB:m.tB,
-      sA:m.sA, sB:m.sB,
-      ev:m.ev||[],
-      cfg:m.cfg||{},
-      ca:m.ca||now,
+      sport:clean(m.sport,'football'),
+      tA:cleanTeam(m.tA),
+      tB:cleanTeam(m.tB),
+      sA:clean(m.sA,0),
+      sB:clean(m.sB,0),
+      ev:cleanedEv,
+      cfg:cleanedCfg,
+      ca:clean(m.ca,now),
       st:'finished',
       voteOpen:true,
       voteClosesAt:FB.Timestamp.fromMillis(closesAt),
       votableTeams:votableTeams,
       createdBy:u.uid,
-      createdByName:u.displayName||u.email||'Arbitre',
+      createdByName:clean(u.displayName,clean(u.email,'Arbitre')),
       createdAt:FB.serverTimestamp(),
       season:getSeason()
     };
+
+    console.log('[Firestore] Upload match',m.id,matchDoc);
     await FB.setDoc(FB.doc(db,'matches',m.id),matchDoc);
+    console.log('[Firestore] Upload OK');
 
     // Stocke l'état localement pour ne pas réuploader
     m.voteOpen=true;
@@ -965,8 +1001,15 @@ window.voteUpload=async function(id){
     toast('✅ Votes ouverts !');
     showFi(id); // re-render la fiche avec les nouvelles infos
   }catch(e){
-    console.error('Upload error:',e);
-    toast('❌ Erreur : '+(e.code||e.message||'inconnue'));
+    console.error('[Firestore] Upload error:',e);
+    var msg=e.code||e.message||'Erreur inconnue';
+    if(msg.indexOf('permission')>=0||msg.indexOf('Permission')>=0){
+      toast('❌ Permission refusée — vérifie les règles Firestore');
+    }else if(msg.indexOf('undefined')>=0){
+      toast('❌ Donnée invalide dans le match');
+    }else{
+      toast('❌ '+msg);
+    }
     for(var i=0;i<btns.length;i++)btns[i].disabled=false;
   }
 };
