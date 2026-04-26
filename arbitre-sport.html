@@ -721,6 +721,255 @@ function evDesc(e,m){
   return min+' '+(e.tp||'');
 }
 
+// ============================================================
+// LOT 2a : Détection automatique des exploits / faits marquants
+// Analyse m.ev et retourne un tableau de strings à afficher
+// ============================================================
+function computeExploits(m){
+  if(!m||!m.ev||!m.ev.length)return[];
+  var out=[];
+
+  // Compter buts, passes, jaunes par joueur (identifié par "team:#num")
+  var goals={},passes={},yellows={};
+  for(var i=0;i<m.ev.length;i++){
+    var e=m.ev[i];
+    if(e.tp==='goal'){
+      var sc=e.scorer||(e.pl?(e.pl.match(/^(.+?)(?:\s*\(p\.|$)/)||[])[1]:null);
+      if(sc){var ks=e.t+':'+sc.trim();goals[ks]=(goals[ks]||0)+1}
+      var pa=e.passer||(e.pl?(e.pl.match(/\(p\.\s*(.+?)\)/)||[])[1]:null);
+      if(pa){var kp=e.t+':'+pa.trim();passes[kp]=(passes[kp]||0)+1}
+    }else if(e.tp==='yellow' && e.pl){
+      var ky=e.t+':'+e.pl.trim();yellows[ky]=(yellows[ky]||0)+1;
+    }
+  }
+
+  // Helper pour formater "Équipe — #num"
+  function fmt(key){var p=key.split(':'),tn=p[0]==='A'?m.tA.n:m.tB.n;return p[1]+' ('+tn+')'}
+
+  // 1) Buts multiples (doublé / hat-trick / quadruplé / quintuplé+)
+  for(var k in goals){
+    var n=goals[k];
+    if(n===2)out.push('⚡ Doublé : '+fmt(k));
+    else if(n===3)out.push('🎩 Hat-trick : '+fmt(k));
+    else if(n===4)out.push('💎 Quadruplé : '+fmt(k));
+    else if(n>=5)out.push('🔥 Quintuplé ('+n+' buts) : '+fmt(k));
+  }
+
+  // 2) Passes décisives multiples
+  for(var k in passes){
+    var n=passes[k];
+    if(n===2)out.push('🅿️ Double passe décisive : '+fmt(k));
+    else if(n===3)out.push('🎯 Triple passe décisive : '+fmt(k));
+    else if(n>=4)out.push('🌟 '+n+' passes décisives : '+fmt(k));
+  }
+
+  // 3) Implication décisive : but ET passe d'un même joueur
+  for(var k in goals){
+    if(passes[k]){
+      out.push('🎪 Implication décisive : '+fmt(k)+' ('+goals[k]+' but'+(goals[k]>1?'s':'')+' + '+passes[k]+' passe'+(passes[k]>1?'s':'')+')');
+    }
+  }
+
+  // 4) Expulsion sur 2 jaunes
+  for(var k in yellows){
+    if(yellows[k]>=2)out.push('🟨🟨 Expulsion (2 jaunes) : '+fmt(k));
+  }
+
+  return out;
+}
+
+// ============================================================
+// LOT 2b : Édition d'un événement
+// ============================================================
+window.editEvent=function(matchId,idx){
+  var m=ld(matchId);if(!m||!m.ev||!m.ev[idx]){toast('Événement introuvable');return}
+  var e=m.ev[idx];
+  var hasFirestore=m.voteOpen===true;
+
+  var h='<div class="mo-t">✏️ Modifier '+(
+    e.tp==='goal'?'le but':
+    e.tp==='yellow'?'le carton jaune':
+    e.tp==='red'?'le carton rouge':
+    e.tp==='sub'?'le remplacement':'l\'événement'
+  )+'</div>';
+
+  // Champ commun : équipe
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Équipe</label>';
+  h+='<div style="display:flex;gap:6px">';
+  h+='<button class="ed-team" data-team="A" onclick="edSetTeam(\'A\')" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(e.t==='A'?m.tA.c:'var(--bg3)')+';background:'+(e.t==='A'?'rgba(255,255,255,0.05)':'var(--bg3)')+';color:'+m.tA.c+';font-weight:600;cursor:pointer">'+esc(m.tA.n)+'</button>';
+  h+='<button class="ed-team" data-team="B" onclick="edSetTeam(\'B\')" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(e.t==='B'?m.tB.c:'var(--bg3)')+';background:'+(e.t==='B'?'rgba(255,255,255,0.05)':'var(--bg3)')+';color:'+m.tB.c+';font-weight:600;cursor:pointer">'+esc(m.tB.n)+'</button>';
+  h+='</div></div>';
+
+  // Champ commun : minute
+  h+='<div style="margin-bottom:10px">';
+  h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Minute</label>';
+  h+='<input type="number" id="ed-mn" value="'+(e.mn||0)+'" min="0" max="200" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+  h+='</div>';
+
+  // Champs spécifiques selon le type
+  if(e.tp==='goal'){
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Buteur</label>';
+    h+='<input type="text" id="ed-scorer" value="'+esc(e.scorer||'')+'" placeholder="#9" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+    h+='</div>';
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Passeur décisif (optionnel)</label>';
+    h+='<input type="text" id="ed-passer" value="'+esc(e.passer||'')+'" placeholder="#10 ou vide" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+    h+='</div>';
+  }else if(e.tp==='yellow'||e.tp==='red'){
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Joueur</label>';
+    h+='<input type="text" id="ed-player" value="'+esc(e.pl||'')+'" placeholder="#3" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+    h+='</div>';
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Type de carton</label>';
+    h+='<div style="display:flex;gap:6px">';
+    h+='<button class="ed-card" data-card="yellow" onclick="edSetCard(\'yellow\')" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(e.tp==='yellow'?'var(--yl)':'var(--bg3)')+';background:'+(e.tp==='yellow'?'rgba(250,204,21,0.15)':'var(--bg3)')+';color:var(--yl);font-weight:600;cursor:pointer">🟨 Jaune</button>';
+    h+='<button class="ed-card" data-card="red" onclick="edSetCard(\'red\')" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(e.tp==='red'?'var(--rd)':'var(--bg3)')+';background:'+(e.tp==='red'?'rgba(239,68,68,0.15)':'var(--bg3)')+';color:var(--rd);font-weight:600;cursor:pointer">🟥 Rouge</button>';
+    h+='</div></div>';
+  }else if(e.tp==='sub'){
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Sortant</label>';
+    h+='<input type="text" id="ed-out" value="'+esc(e.out||'')+'" placeholder="#12" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+    h+='</div>';
+    h+='<div style="margin-bottom:10px">';
+    h+='<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Entrant</label>';
+    h+='<input type="text" id="ed-inn" value="'+esc(e.inn||'')+'" placeholder="#13" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bg3);background:var(--bg3);color:var(--tx);font-size:14px">';
+    h+='</div>';
+  }
+
+  // Case "mettre à jour Firestore" si match déjà uploadé
+  if(hasFirestore){
+    h+='<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border-radius:8px;margin-bottom:14px;cursor:pointer">';
+    h+='<input type="checkbox" id="ed-sync" checked style="width:18px;height:18px;accent-color:var(--gn)">';
+    h+='<span style="font-size:12px;color:var(--tx2)">🔄 Mettre à jour le partage avec votants</span>';
+    h+='</label>';
+  }
+
+  // Boutons
+  h+='<div style="display:flex;gap:6px;margin-top:14px">';
+  h+='<button class="mo-btn" style="flex:1;background:var(--bg3);color:var(--tx2)" onclick="clMo()">Annuler</button>';
+  h+='<button class="mo-btn" style="flex:1;background:var(--rd);color:#fff" onclick="deleteEvent(\''+matchId+'\','+idx+')">🗑️ Supprimer</button>';
+  h+='<button class="mo-btn" style="flex:2;background:var(--gn);color:#fff;font-weight:700" onclick="saveEditedEvent(\''+matchId+'\','+idx+')">💾 Enregistrer</button>';
+  h+='</div>';
+
+  // État local pour les boutons toggleables
+  window._edState={team:e.t,card:(e.tp==='yellow'||e.tp==='red')?e.tp:null};
+  showMo(h);
+};
+
+// Toggle équipe dans la modal d'édition
+window.edSetTeam=function(t){
+  window._edState.team=t;
+  // Re-rendre les boutons d'équipe
+  var btns=document.querySelectorAll('.ed-team');
+  for(var i=0;i<btns.length;i++){
+    var b=btns[i],sel=b.dataset.team===t;
+    // Couleur : on récupère la couleur de l'équipe depuis le style color du bouton lui-même
+    var col=b.style.color||'var(--gn)';
+    b.style.borderColor=sel?col:'var(--bg3)';
+    b.style.background=sel?'rgba(255,255,255,0.05)':'var(--bg3)';
+  }
+};
+window.edSetCard=function(c){
+  window._edState.card=c;
+  var btns=document.querySelectorAll('.ed-card');
+  for(var i=0;i<btns.length;i++){
+    var b=btns[i],kind=b.dataset.card,sel=(kind===c);
+    if(kind==='yellow'){
+      b.style.borderColor=sel?'var(--yl)':'var(--bg3)';
+      b.style.background=sel?'rgba(250,204,21,0.15)':'var(--bg3)';
+    }else if(kind==='red'){
+      b.style.borderColor=sel?'var(--rd)':'var(--bg3)';
+      b.style.background=sel?'rgba(239,68,68,0.15)':'var(--bg3)';
+    }
+  }
+};
+
+// Enregistrer l'événement modifié
+window.saveEditedEvent=async function(matchId,idx){
+  var m=ld(matchId);if(!m||!m.ev||!m.ev[idx]){toast('Événement introuvable');return}
+  var e=m.ev[idx];
+  var st=window._edState||{};
+
+  // Construire l'événement modifié
+  var newEv={tp:e.tp,t:st.team||e.t,mn:0,ts:e.ts||Date.now()};
+  var mn=parseInt(document.getElementById('ed-mn').value,10);
+  newEv.mn=isNaN(mn)?(e.mn||0):mn;
+
+  if(e.tp==='goal'){
+    var sc=document.getElementById('ed-scorer').value.trim();
+    var pa=document.getElementById('ed-passer').value.trim();
+    if(!sc){toast('Buteur requis');return}
+    newEv.scorer=sc;newEv.passer=pa;
+    // Champ pl pour rétrocompat
+    newEv.pl=sc+(pa?' (p. '+pa+')':'');
+  }else if(e.tp==='yellow'||e.tp==='red'||(st.card==='yellow'||st.card==='red')){
+    var pl=document.getElementById('ed-player').value.trim();
+    if(!pl){toast('Joueur requis');return}
+    newEv.pl=pl;
+    // Permettre de basculer jaune ↔ rouge
+    if(st.card)newEv.tp=st.card;
+  }else if(e.tp==='sub'){
+    var ou=document.getElementById('ed-out').value.trim();
+    var inn=document.getElementById('ed-inn').value.trim();
+    if(!ou&&!inn){toast('Sortant ou entrant requis');return}
+    newEv.out=ou;newEv.inn=inn;
+    newEv.pl=(ou&&inn)?(ou+' → '+inn):(ou?ou+' →':'→ '+inn);
+  }
+
+  // Sauvegarde locale
+  m.ev[idx]=newEv;
+  saveMatchToList(m);
+
+  // Sync Firestore si demandé
+  var syncCb=document.getElementById('ed-sync');
+  if(m.voteOpen && syncCb && syncCb.checked && window.FB && window.FB_DB){
+    try{
+      await window.FB.updateDoc(window.FB.doc(window.FB_DB,'matches',m.id),{ev:m.ev});
+      toast('✅ Événement modifié + synchronisé');
+    }catch(err){
+      console.error('Sync error:',err);
+      toast('✏️ Modifié localement, ⚠️ sync échouée');
+    }
+  }else{
+    toast('✅ Événement modifié');
+  }
+
+  clMo();
+  showFi(matchId);
+};
+
+// Supprimer un événement
+window.deleteEvent=function(matchId,idx){
+  confirm2('Supprimer cet événement ?',async function(){
+    var m=ld(matchId);if(!m||!m.ev)return;
+    var hadFirestore=m.voteOpen===true;
+    m.ev.splice(idx,1);
+    saveMatchToList(m);
+    if(hadFirestore && window.FB && window.FB_DB){
+      try{
+        await window.FB.updateDoc(window.FB.doc(window.FB_DB,'matches',m.id),{ev:m.ev});
+      }catch(e){console.error(e)}
+    }
+    toast('🗑️ Événement supprimé');
+    clMo();
+    showFi(matchId);
+  });
+};
+
+// Helper : sauve un match dans la liste arb_m (sans toucher à M)
+function saveMatchToList(m){
+  var all=gAll();
+  for(var i=0;i<all.length;i++){
+    if(all[i].id===m.id){all[i]=m;localStorage.setItem('arb_m',JSON.stringify(all));return}
+  }
+  // Si pas trouvé, on ajoute
+  all.unshift(m);
+  localStorage.setItem('arb_m',JSON.stringify(all));
+}
+
 function showFi(id){var m=ld(id);if(!m){toast('Introuvable');return}
 var sp=SP.find(function(s){return s.id===m.sport})||SP[0];
 var d=new Date(m.ca);var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
@@ -740,7 +989,27 @@ if(m.ev.length){
 var sortedEv=m.ev.slice().sort(function(a,b){if(a.mn!==b.mn)return a.mn-b.mn;return(a.ts||0)-(b.ts||0)});
 h+='<div class="fi-sec"><div class="fi-sec-t">📋 Événements</div>';
 for(var i=0;i<sortedEv.length;i++){var e=sortedEv[i];
-h+='<div class="fi-st" style="display:block;line-height:1.5"><span class="fi-st-l" style="font-size:12px">'+esc(evDesc(e,m))+'</span></div>'}h+='</div>'}
+  // Identifiant stable de l'événement : timestamp ou index original
+  var origIdx=m.ev.indexOf(e);
+  // Pas d'édition pour les événements structurels (mi-temps, fin)
+  var canEdit=(e.tp==='goal'||e.tp==='yellow'||e.tp==='red'||e.tp==='sub');
+  h+='<div class="fi-st" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;line-height:1.5;padding:8px 10px">';
+  h+='<span class="fi-st-l" style="font-size:12px;flex:1;min-width:0">'+esc(evDesc(e,m))+'</span>';
+  if(canEdit){
+    h+='<button onclick="editEvent(\''+id+'\','+origIdx+')" style="background:transparent;border:1px solid var(--bg3);color:var(--tx2);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;flex-shrink:0">✏️</button>';
+  }
+  h+='</div>';
+}
+h+='</div>';
+// Section "Faits marquants" — détection automatique des exploits
+var exploits=computeExploits(m);
+if(exploits.length){
+  h+='<div class="fi-sec"><div class="fi-sec-t">🌟 Faits marquants</div>';
+  for(var ei=0;ei<exploits.length;ei++){
+    h+='<div class="fi-st" style="display:block;line-height:1.5;padding:8px 10px"><span class="fi-st-l" style="font-size:12px">'+esc(exploits[ei])+'</span></div>';
+  }
+  h+='</div>';
+}}
 h+='<div class="fi-sec" id="fi-votes-sec"><div class="fi-sec-t">🌟 Votes des joueurs</div>';
 h+='<div id="fi-votes-content" style="padding:12px 4px"></div>';
 h+='</div>';
