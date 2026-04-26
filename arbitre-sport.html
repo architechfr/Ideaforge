@@ -278,7 +278,7 @@ body{display:flex;flex-direction:column}
 .vt-actions .vt-ns-btn.ns-active{background:rgba(59,130,246,0.10);color:var(--bl);border-color:var(--bl);border-style:solid}
 .vt-card.ns .vt-star-cell .star-fg{display:none}
 .vt-card.ns .vt-star-cell .star-bg{color:var(--bg2);opacity:0.4}
-.vt-card.ns .vt-stars-touch button{cursor:default}
+.vt-card.ns .vt-rating-control{opacity:.4;pointer-events:none}
 .vt-card-rating.ns{color:var(--bl);font-style:italic;font-weight:600;font-size:12px;letter-spacing:0}
 
 /* VOTE — etoiles + resume joueur (Lot 5) */
@@ -293,12 +293,16 @@ body{display:flex;flex-direction:column}
 .vt-card-stats span{white-space:nowrap}
 .vt-card-stats .empty-stat{color:var(--tx3);font-style:italic;font-size:10px}
 .vt-stars-wrap{display:flex;justify-content:center;gap:4px;margin:0 auto;width:fit-content;user-select:none;-webkit-user-select:none;position:relative}
-.vt-star-cell{position:relative;width:36px;height:36px;font-size:32px;line-height:36px;text-align:center;display:inline-block}
+.vt-star-cell{position:relative;width:32px;height:32px;font-size:28px;line-height:32px;text-align:center;display:inline-block}
 .vt-star-cell .star-bg{color:var(--bg);position:absolute;top:0;left:0;right:0;bottom:0;width:100%}
 .vt-star-cell .star-fg{color:#facc15;position:absolute;top:0;left:0;width:0;overflow:hidden;text-shadow:0 0 6px rgba(250,204,21,0.4);transition:width .12s}
-.vt-stars-touch{display:flex;position:absolute;top:0;left:0;right:0;bottom:0;z-index:2}
-.vt-stars-touch button{flex:1;background:transparent;border:none;padding:0;cursor:pointer;color:transparent;font-size:0;font-family:inherit;height:100%}
-.vt-stars-touch button:active{background:rgba(250,204,21,0.08)}
+/* Lot 5 v2 : controle [-][chiffre][+] au-dessus des etoiles */
+.vt-rating-control{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 auto 6px;user-select:none;-webkit-user-select:none}
+.vt-rate-btn{width:48px;height:48px;border-radius:50%;border:2px solid var(--bg3);background:var(--bg);color:var(--tx);font-size:24px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:transform .08s, background .15s, border-color .15s}
+.vt-rate-btn:active{transform:scale(.92);background:var(--bg3);border-color:var(--gn)}
+.vt-rate-btn.dim{opacity:.35;cursor:default}
+.vt-rate-value{font-size:24px;font-weight:800;color:var(--yl);min-width:78px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.vt-rate-value.empty{color:var(--tx3);font-size:13px;font-weight:600;letter-spacing:0}
 .vt-clear{margin-top:6px;text-align:center}
 .vt-clear button{background:transparent;border:1px dashed var(--tx3);color:var(--tx3);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
 .vt-clear button:active{background:var(--bg2)}
@@ -1944,7 +1948,7 @@ function renderVoteLive(matchId,votes){
   h+='</span>';
   if(motm){
     var p=motm.key.split(':'),tn=p[0]==='A'?m.tA.n:m.tB.n;
-    h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+(motm.avg/2).toFixed(1).replace('.',',')+'/5</span>';
+    h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+motm.avg.toFixed(1).replace('.',',')+'/10</span>';
   }
   h+='</div>';
 
@@ -1959,7 +1963,7 @@ function renderVoteLive(matchId,votes){
     var nsLabel=s.ns?' <span style="color:var(--bl);font-size:9px">('+s.ns+' NS)</span>':'';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">';
     h+='<span><span style="color:'+col+';font-weight:600">'+esc(pp[1])+'</span> <span style="color:var(--tx3);font-size:10px">'+esc(tnn)+'</span></span>';
-    h+='<span style="font-weight:700;color:var(--tx)">'+(s.avg/2).toFixed(1).replace('.',',')+' <span style="color:var(--tx3);font-size:10px;font-weight:400">/5 ('+s.count+'×)</span>'+nsLabel+'</span>';
+    h+='<span style="font-weight:700;color:var(--tx)">'+s.avg.toFixed(1).replace('.',',')+' <span style="color:var(--tx3);font-size:10px;font-weight:400">/10 ('+s.count+'×)</span>'+nsLabel+'</span>';
     h+='</div>';
   }
   h+='</div>';
@@ -2073,7 +2077,7 @@ function renderVotePage(){
   h+='<div class="hdr" style="position:sticky;top:0;z-index:5"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">🗳️ MES NOTES</div><div style="width:44px"></div></div>';
   h+='<div style="padding:14px">';
   h+='<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:4px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>';
-  h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0,5 à 5 étoiles (par demi-étoile)</div>';
+  h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0,5 à 10 (par demi-points)</div>';
 
   // Joueurs groupes par equipe — Lot 5 : etoiles + resume statistiques
   // Pre-calcul des stats par joueur depuis m.ev pour ne parcourir qu'une fois
@@ -2107,11 +2111,16 @@ function renderVotePage(){
     h+='<div class="vt-card">';
     h+='<div class="vt-card-h">';
     h+='<div class="vt-card-name"><span class="pl-num">'+esc(p.num)+'</span>'+subBadge+'</div>';
-    h+='<div class="vt-card-rating empty" id="vd-'+safeKey+'">—</div>';
+    h+='<div class="vt-card-rating empty" id="vdh-'+safeKey+'">—</div>';
     h+='</div>';
     h+='<div class="vt-card-stats">'+statsLine+'</div>';
     if(ptLine)h+=ptLine;
-    // Lot 5 chantier 3 : 5 cellules d'etoile independantes (flex) + 10 zones tactiles (granularite 0.5)
+    // Lot 5 v2 : controle [-][chiffre /10][+] + 5 etoiles indicateur (non cliquables)
+    h+='<div class="vt-rating-control" data-key="'+esc(key)+'">';
+    h+='<button class="vt-rate-btn vt-rate-minus" id="vrm-'+safeKey+'" onclick="adjustRating(\''+esc(key)+'\',-0.5)" aria-label="Baisser de 0,5">−</button>';
+    h+='<div class="vt-rate-value empty" id="vd-'+safeKey+'">—/10</div>';
+    h+='<button class="vt-rate-btn vt-rate-plus" id="vrp-'+safeKey+'" onclick="adjustRating(\''+esc(key)+'\',0.5)" aria-label="Monter de 0,5">+</button>';
+    h+='</div>';
     h+='<div class="vt-stars-wrap" data-key="'+esc(key)+'">';
     for(var s=1;s<=5;s++){
       h+='<span class="vt-star-cell">';
@@ -2119,11 +2128,7 @@ function renderVotePage(){
       h+='<span class="star-fg" id="vsf-'+safeKey+'-'+s+'">★</span>';
       h+='</span>';
     }
-    h+='<div class="vt-stars-touch">';
-    for(var v=1;v<=10;v++){
-      h+='<button onclick="setStarRating(\''+esc(key)+'\','+v+')" aria-label="'+(v/2).toFixed(1).replace('.',',')+'/5"></button>';
-    }
-    h+='</div></div>';
+    h+='</div>';
     // Lot 5 chantier 2 : 2 boutons "Effacer" + "Pas vu jouer"
     h+='<div class="vt-actions">';
     h+='<button onclick="clearStarRating(\''+esc(key)+'\')">Effacer</button>';
@@ -2701,6 +2706,27 @@ window.setStarRating=function(key,val){
   // Mini retour haptique
   try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
 };
+// Lot 5 v2 : ajustement par +/- 0.5 avec demarrage a 5 si pas de note
+window.adjustRating=function(key,delta){
+  var current=V_RATINGS[key];
+  // Cas "Pas vu jouer" : on ne touche pas tant que l'utilisateur n'a pas explicitement reset
+  if(current==='NS')return;
+  var n;
+  if(typeof current!=='number'||current<=0){
+    // Pas de note : demarrer a 5 (note neutre mediane), ignorer le signe du delta
+    n=5;
+  }else{
+    n=current+delta;
+  }
+  // Clamp [0.5, 10]
+  if(n<0.5){clearStarRating(key);return}
+  if(n>10)n=10;
+  // Arrondi propre au demi (evite les drifts type 5.5000001)
+  n=Math.round(n*2)/2;
+  V_RATINGS[key]=n;
+  applyStarDisplay(key,n);
+  try{if(navigator.vibrate)navigator.vibrate(12)}catch(e){}
+};
 window.clearStarRating=function(key){
   delete V_RATINGS[key];
   applyStarDisplay(key,0);
@@ -2708,11 +2734,15 @@ window.clearStarRating=function(key){
 function applyStarDisplay(key,val){
   var safeKey=key.replace(':','-').replace('#','').replace('R','r');
   var lbl=document.getElementById('vd-'+safeKey);
+  var lblH=document.getElementById('vdh-'+safeKey);
   // Trouver la carte du joueur (pour ajouter/retirer la classe .ns)
   var wrap=document.querySelector('.vt-stars-wrap[data-key="'+key+'"]');
   var card=wrap&&wrap.parentNode?wrap.parentNode:null;
   // Le bouton "Pas vu jouer" pour cette carte
   var nsBtn=card?card.querySelector('.vt-ns-btn'):null;
+  // Boutons +/- pour cette carte
+  var btnMinus=document.getElementById('vrm-'+safeKey);
+  var btnPlus=document.getElementById('vrp-'+safeKey);
 
   // Helper : remplit chaque etoile selon la note (en /5 par 0.5)
   function fillStars(n5){
@@ -2729,12 +2759,15 @@ function applyStarDisplay(key,val){
   if(val==='NS'){
     // Mode "Pas vu jouer"
     fillStars(0);
-    if(lbl){lbl.textContent='Pas vu jouer';lbl.className='vt-card-rating ns'}
+    if(lbl){lbl.textContent='Pas vu jouer';lbl.className='vt-rate-value empty'}
+    if(lblH){lblH.textContent='👁️';lblH.className='vt-card-rating ns'}
     if(card)card.className='vt-card ns';
     if(nsBtn)nsBtn.className='vt-ns-btn ns-active';
+    if(btnMinus)btnMinus.className='vt-rate-btn vt-rate-minus';
+    if(btnPlus)btnPlus.className='vt-rate-btn vt-rate-plus';
     return;
   }
-  // Mode normal : note interne en /10, affichage en /5
+  // Mode normal : note interne en /10 (par 0.5), affichage /10, etoiles indicateur en /5
   if(card)card.className='vt-card';
   if(nsBtn)nsBtn.className='vt-ns-btn';
   var n10=typeof val==='number'?val:parseFloat(val)||0;
@@ -2742,13 +2775,25 @@ function applyStarDisplay(key,val){
   fillStars(n5);
   if(lbl){
     if(n10>0){
-      lbl.textContent=n5.toFixed(1).replace('.',',')+'/5';
-      lbl.className='vt-card-rating';
+      lbl.textContent=n10.toFixed(1).replace('.',',')+'/10';
+      lbl.className='vt-rate-value';
     }else{
-      lbl.textContent='—';
-      lbl.className='vt-card-rating empty';
+      lbl.textContent='—/10';
+      lbl.className='vt-rate-value empty';
     }
   }
+  if(lblH){
+    if(n10>0){
+      lblH.textContent=n10.toFixed(1).replace('.',',');
+      lblH.className='vt-card-rating';
+    }else{
+      lblH.textContent='—';
+      lblH.className='vt-card-rating empty';
+    }
+  }
+  // Lot 5 v2 : griser les boutons aux limites
+  if(btnMinus)btnMinus.className='vt-rate-btn vt-rate-minus'+(n10<=0||n10<=0.5?' dim':'');
+  if(btnPlus)btnPlus.className='vt-rate-btn vt-rate-plus'+(n10>=10?' dim':'');
 }
 // Lot 5 chantier 2 : marque un joueur comme "Pas vu jouer" (NS = Not Seen)
 window.setNotSeenRating=function(key){
