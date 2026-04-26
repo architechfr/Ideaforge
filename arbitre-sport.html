@@ -214,6 +214,9 @@ body{display:flex;flex-direction:column}
 .tm-empty{padding:30px 16px;text-align:center;color:var(--tx3);font-size:13px;line-height:1.5}
 .tm-add-btn{margin:0 16px 16px;padding:14px;background:linear-gradient(135deg,var(--gn),var(--gn2));border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);font-family:inherit}
 .tm-add-btn:active{transform:scale(.97)}
+.tm-io-row{display:flex;gap:8px;margin:0 16px 14px}
+.tm-io-btn{flex:1;padding:10px 8px;background:var(--bg3);border:1px dashed var(--tx3);border-radius:10px;color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.tm-io-btn:active{background:var(--bg);border-color:var(--tx2);color:var(--tx)}
 .tm-intro{padding:14px 20px 4px;font-size:12px;color:var(--tx2);line-height:1.5;text-align:center}
 /* Editeur d'equipe (modale) */
 .tm-ed-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
@@ -345,6 +348,7 @@ body{display:flex;flex-direction:column}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 <div class="tm-intro">Memorise tes equipes une fois — tu les rechargeras instantanement pour chaque match.</div>
 <button class="tm-add-btn" onclick="newTeamEditor()">➕ Nouvelle equipe</button>
+<div class="tm-io-row"><button class="tm-io-btn" onclick="exportTeams()">📥 Exporter</button><button class="tm-io-btn" onclick="importTeams()">📤 Importer</button></div>
 <div id="tm-list" class="tm-list"></div>
 </div></div>
 
@@ -433,6 +437,11 @@ body{display:flex;flex-direction:column}
 <div id="s-fiche" class="screen">
 <div class="hdr"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">FEUILLE DE MATCH</div><div style="width:44px"></div></div>
 <div class="fi" id="fi-c"></div>
+</div>
+
+<div id="s-results" class="screen">
+<div class="hdr"><button class="hdr-back" onclick="(window._resultsMid?showFi(window._resultsMid):goH())">‹</button><div class="hdr-t">🏆 RESULTATS</div><div style="width:44px"></div></div>
+<div class="fi" id="results-c"></div>
 </div>
 
 <div class="mo-bg" id="mo-bg" onclick="clMo(event)"><div class="mo" id="mo-c"></div></div>
@@ -1008,18 +1017,32 @@ else if(M.st==='paused'){
 rM();sav()}
 
 // PLAYER PICKER
-function pickPl(team,title,cb){
-var players=team==='A'?M.tA.p:M.tB.p;
-if(!players||!players.length){cb('');return}
+function pickPl(team,title,cb,mode){
+// Lot 4 v2 : mode = 'field' (sur le terrain, défaut) | 'bench' (sur le banc) | 'all' (tous)
+mode=mode||'field';
+var allPlayers=team==='A'?M.tA.p:M.tB.p;
+if(!allPlayers||!allPlayers.length){cb('');return}
+// Filtrer selon le mode
+var players=[];
+for(var i=0;i<allPlayers.length;i++){
+  var p=allPlayers[i];
+  if(mode==='all')players.push(p);
+  else if(mode==='bench'&&isOnBench(team,p))players.push(p);
+  else if(mode==='field'&&isOnField(team,p))players.push(p);
+}
 var mc=document.getElementById('mo-c');
-var h='<div class="mo-t">'+esc(title)+'</div><div class="pk-grid">';
-for(var i=0;i<players.length;i++){
-  var p=players[i];
-  var out=isOut(team,p);
-  var yc=getYellows(team,p);
-  var sty=out?' style="opacity:.45;text-decoration:line-through" data-out="1"':'';
-  var lbl=out?'⛔ '+esc(p):(yc>=1?'🟨 '+esc(p):esc(p));
-  h+='<button class="pk-btn" data-pi="'+i+'"'+sty+'>'+lbl+'</button>';
+var subtitle='';
+if(mode==='field')subtitle='Joueurs sur le terrain';
+else if(mode==='bench')subtitle='Joueurs sur le banc';
+var h='<div class="mo-t">'+esc(title)+'</div>';
+if(subtitle)h+='<div style="font-size:11px;color:var(--tx3);text-align:center;margin:-6px 0 8px">'+subtitle+'</div>';
+h+='<div class="pk-grid">';
+if(players.length===0){
+  h+='<div style="color:var(--tx3);font-size:12px;text-align:center;width:100%;padding:8px 0">Aucun joueur disponible</div>';
+}else{
+  for(var i=0;i<players.length;i++){
+    h+='<button class="pk-btn" data-pi="'+i+'">'+esc(players[i])+'</button>';
+  }
 }
 h+='</div><button class="pk-skip" id="pk-skip">Sans nom</button>';
 mc.innerHTML=h;
@@ -1028,11 +1051,6 @@ var btns=mc.querySelectorAll('.pk-btn');
 for(var i=0;i<btns.length;i++){
   btns[i].onclick=function(){
     var nm=players[parseInt(this.getAttribute('data-pi'))];
-    if(this.getAttribute('data-out')==='1'){
-      toast('⛔ '+nm+' est exclu — action non autorisée');
-      vb(50);
-      return;
-    }
     clMo();cb(nm);
   };
 }
@@ -1068,6 +1086,46 @@ function isOut(t,pl){
     if(e.tp==='red'&&e.t===t&&e.pl===pl)return true;
   }
   return getYellows(t,pl)>=2;
+}
+
+// Lot 4 v2 : un joueur est-il actuellement sur le terrain ?
+// - titulaire (#x) qui n'est pas sorti par un sub et pas exclu : oui
+// - remplaçant (Rx) qui est entré par un sub et pas re-sorti et pas exclu : oui
+// - sinon : non
+function isOnField(t,pl){
+  if(!pl)return true; // "Sans nom" reste autorisé partout
+  if(isOut(t,pl))return false;
+  var hasEntered=false,hasExited=false;
+  if(M&&M.ev){
+    for(var i=0;i<M.ev.length;i++){
+      var e=M.ev[i];
+      if(e.tp==='sub'&&e.t===t){
+        if(e.inn===pl)hasEntered=true;
+        if(e.out===pl)hasExited=true;
+      }
+    }
+  }
+  if(isSubPlayer(pl)){
+    // Remplaçant : sur le terrain seulement s'il est entré et pas re-sorti
+    return hasEntered&&!hasExited;
+  }
+  // Titulaire : sur le terrain par défaut, sauf s'il est sorti
+  return !hasExited;
+}
+
+// Lot 4 v2 : un joueur est-il actuellement sur le banc (= remplaçant disponible) ?
+function isOnBench(t,pl){
+  if(!pl)return true;
+  if(!isSubPlayer(pl))return false; // les titulaires ne sont jamais sur le banc
+  if(isOut(t,pl))return false;
+  var hasEntered=false;
+  if(M&&M.ev){
+    for(var i=0;i<M.ev.length;i++){
+      var e=M.ev[i];
+      if(e.tp==='sub'&&e.t===t&&e.inn===pl){hasEntered=true;break}
+    }
+  }
+  return !hasEntered; // sur le banc tant qu'il n'est pas entré
 }
 
 function card(t,c){
@@ -1143,7 +1201,7 @@ var mn=gMin();if(t==='A')M.uA++;else M.uB++;
 var pl='';
 if(out&&inn)pl=out+' → '+inn;else if(out)pl=out+' →';else if(inn)pl='→ '+inn;
 M.ev.push({tp:'sub',t:t,mn:mn,pl:pl,out:out||'',inn:inn||'',ts:Date.now()});vb(100);rM();sav();
-});});
+},'bench');});
 }
 function injury(t){
 if(!M||M.st==='finished')return;
@@ -1551,6 +1609,22 @@ function fSt(a,l,b){return'<div class="fi-st"><span class="fi-st-v">'+a+'</span>
 function renderVotesSection(m,id){
   var el=document.getElementById('fi-votes-content');
   if(!el)return;
+
+  // Lot Results : ÉTAT 4 — Votes activés puis fermés (ou clôturés par expiration)
+  // Critère : m.voteClosesAt existe (= les votes ont été activés à un moment) ET m.voteOpen est false
+  if(m.voteClosesAt&&m.voteOpen===false){
+    var closeStr='';
+    if(m.voteClosesAt){
+      var dc=new Date(m.voteClosesAt);
+      closeStr=dc.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+dc.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+    el.innerHTML=
+      '<div style="text-align:center;padding:6px 0">'+
+        '<div style="font-size:13px;color:var(--tx2);margin-bottom:4px">🔒 Votes fermés'+(closeStr?' — '+closeStr:'')+'</div>'+
+        '<button class="fi-btn fi-btn-s" style="width:100%;margin-top:10px;font-size:14px;padding:14px" onclick="showResults(\''+id+'\')">🏆 Voir les résultats des votes</button>'+
+      '</div>';
+    return;
+  }
 
   // ÉTAT 3 : Votes activés
   if(m.voteOpen){
@@ -1990,6 +2064,229 @@ function renderVoteLive(matchId,votes){
 }
 
 // ============================================================
+// LOT RESULTS : RESULTATS POST-CLOTURE — top 11 par poste, top global, top par critère
+// ============================================================
+
+// Mapping de poste par convention 4-3-3 (#1=GK, #2-5=DEF, #6-8=MID, #9-11=ATT, R*=DEF/MID/ATT)
+// Override possible via M.tA.pos = {playerName: 'GK'|'DEF'|'MID'|'ATT'}
+function getPlayerPos(team,player){
+  if(!player)return 'MID';
+  var teamObj=null;
+  if(M){teamObj=team==='A'?M.tA:team==='B'?M.tB:null}
+  // (en mode résultats, M peut être undefined : on utilise alors le match courant fourni autrement)
+  if(teamObj&&teamObj.pos&&teamObj.pos[player])return teamObj.pos[player];
+  // Convention #N
+  var m1=String(player).match(/^#?(\d+)$/);
+  if(m1){
+    var n=parseInt(m1[1]);
+    if(n===1)return 'GK';
+    if(n>=2&&n<=5)return 'DEF';
+    if(n>=6&&n<=8)return 'MID';
+    if(n>=9&&n<=11)return 'ATT';
+  }
+  // R1-R5 répartis : R1-R2 = DEF, R3-R4 = MID, R5 = ATT
+  var m2=String(player).match(/^R(\d+)$/);
+  if(m2){
+    var rn=parseInt(m2[1]);
+    if(rn<=2)return 'DEF';
+    if(rn<=4)return 'MID';
+    return 'ATT';
+  }
+  return 'MID'; // défaut pour les noms libres
+}
+
+// Charger tous les votes finaux d'un match depuis Firestore
+async function loadFinalVotes(matchId){
+  var FB=window.FB,db=window.FB_DB;
+  if(!FB||!db||!FB.getDocs)return null;
+  try{
+    var votesCol=FB.collection(db,'matches',matchId,'votes');
+    var snap=await FB.getDocs(votesCol);
+    var votes=[];
+    snap.forEach(function(d){votes.push(d.data())});
+    return votes;
+  }catch(e){
+    console.error('loadFinalVotes error:',e);
+    return null;
+  }
+}
+
+// Agréger les notes finales : top global, top par critère, top 11 par poste
+function computeFinalStats(m,votes){
+  if(!votes||!votes.length)return null;
+  var globalSum={},globalCnt={},nsCnt={};
+  var critSum={},critCnt={};
+  for(var i=0;i<votes.length;i++){
+    var v=votes[i];
+    if(!v.ratings)continue;
+    for(var key in v.ratings){
+      var r=v.ratings[key];
+      // Détecter si c'est un critère (pattern team:player:crit:N)
+      var critMatch=key.match(/^(.+):crit:(\d+)$/);
+      if(critMatch){
+        if(typeof r!=='number')continue;
+        var pk=critMatch[1];var ci=parseInt(critMatch[2]);
+        if(!critSum[pk])critSum[pk]={};
+        if(!critCnt[pk])critCnt[pk]={};
+        critSum[pk][ci]=(critSum[pk][ci]||0)+r;
+        critCnt[pk][ci]=(critCnt[pk][ci]||0)+1;
+      }else{
+        // Note globale
+        if(r==='NS'){nsCnt[key]=(nsCnt[key]||0)+1;continue}
+        if(typeof r!=='number')continue;
+        globalSum[key]=(globalSum[key]||0)+r;
+        globalCnt[key]=(globalCnt[key]||0)+1;
+      }
+    }
+  }
+  // Top global
+  var topGlobal=[];
+  for(var k in globalSum){
+    if(globalCnt[k]<=0)continue;
+    var parts=k.split(':');
+    topGlobal.push({
+      key:k,team:parts[0],player:parts[1],
+      avg:globalSum[k]/globalCnt[k],
+      count:globalCnt[k],
+      ns:nsCnt[k]||0,
+      pos:getPlayerPos(parts[0],parts[1])
+    });
+  }
+  topGlobal.sort(function(a,b){return b.avg-a.avg});
+  // Top 3 par critère
+  var topByCriterion=[];
+  for(var ci=0;ci<CRITERES.length;ci++){
+    var arr=[];
+    for(var pk in critSum){
+      if(critSum[pk][ci]===undefined||!critCnt[pk][ci])continue;
+      var pp=pk.split(':');
+      arr.push({team:pp[0],player:pp[1],avg:critSum[pk][ci]/critCnt[pk][ci],count:critCnt[pk][ci]});
+    }
+    arr.sort(function(a,b){return b.avg-a.avg});
+    topByCriterion.push({criterion:CRITERES[ci],top:arr.slice(0,3)});
+  }
+  // Top 11 par poste (4-3-3)
+  var byPos={GK:[],DEF:[],MID:[],ATT:[]};
+  for(var i=0;i<topGlobal.length;i++){
+    var p=topGlobal[i];
+    if(byPos[p.pos])byPos[p.pos].push(p);
+  }
+  var bestEleven=[
+    {pos:'GK',label:'🥅 Gardien',count:1,players:byPos.GK.slice(0,1)},
+    {pos:'DEF',label:'🛡️ Défense',count:4,players:byPos.DEF.slice(0,4)},
+    {pos:'MID',label:'⚙️ Milieu',count:3,players:byPos.MID.slice(0,3)},
+    {pos:'ATT',label:'⚔️ Attaque',count:3,players:byPos.ATT.slice(0,3)}
+  ];
+  return {voteCount:votes.length,topGlobal:topGlobal,topByCriterion:topByCriterion,bestEleven:bestEleven};
+}
+
+// Page résultats : ouvrir l'écran et déclencher le chargement async
+window.showResults=async function(matchId){
+  var m=ld(matchId);
+  if(!m){toast('Match introuvable');return}
+  document.getElementById('results-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--tx2);font-size:13px">⏳ Chargement des votes…</div>';
+  sh('results');
+  window._resultsMid=matchId; // pour le bouton retour
+  var votes=await loadFinalVotes(matchId);
+  if(votes===null){
+    document.getElementById('results-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--rd);font-size:13px">❌ Impossible de charger les votes</div>';
+    return;
+  }
+  if(!votes.length){
+    document.getElementById('results-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--tx2);font-size:13px">🗳️ Aucun vote enregistré pour ce match.</div>';
+    return;
+  }
+  var stats=computeFinalStats(m,votes);
+  renderResultsPage(m,stats);
+};
+
+function renderResultsPage(m,stats){
+  var h='';
+  // Header avec score et nb de votes
+  h+='<div style="text-align:center;padding:14px 12px 12px;border-bottom:1px solid var(--bg3)">';
+  h+='<div style="font-size:14px;font-weight:800"><span style="color:'+m.tA.c+'">'+esc(m.tA.n)+'</span> '+m.sA+' – '+m.sB+' <span style="color:'+m.tB.c+'">'+esc(m.tB.n)+'</span></div>';
+  h+='<div style="font-size:11px;color:var(--tx2);margin-top:4px">🗳️ '+stats.voteCount+' vote'+(stats.voteCount>1?'s':'')+' enregistré'+(stats.voteCount>1?'s':'')+'</div>';
+  h+='</div>';
+
+  // SECTION 1 : TOP 11 par poste
+  h+='<div class="fi-sec"><div class="fi-sec-t">⚽ Équipe-type du match (4-3-3)</div>';
+  h+='<div style="padding:8px 10px">';
+  for(var pi=0;pi<stats.bestEleven.length;pi++){
+    var bp=stats.bestEleven[pi];
+    h+='<div style="margin-bottom:12px">';
+    h+='<div style="font-size:10px;color:var(--gn);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700">'+bp.label+' ('+bp.players.length+'/'+bp.count+')</div>';
+    if(!bp.players.length){
+      h+='<div style="color:var(--tx3);font-style:italic;font-size:11px;padding:6px 8px">— Aucun joueur noté à ce poste —</div>';
+    }else{
+      for(var pj=0;pj<bp.players.length;pj++){
+        var pl=bp.players[pj];
+        var pcol=pl.team==='A'?m.tA.c:m.tB.c;
+        var ptn=pl.team==='A'?m.tA.n:m.tB.n;
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:4px">';
+        h+='<span><span style="color:'+pcol+';font-weight:700">'+esc(pl.player)+'</span> <span style="color:var(--tx3);font-size:10px;margin-left:4px">'+esc(ptn)+'</span></span>';
+        h+='<span style="color:var(--yl);font-weight:800;font-size:14px">'+pl.avg.toFixed(1).replace('.',',')+'<span style="color:var(--tx3);font-size:10px;font-weight:400">/10</span></span>';
+        h+='</div>';
+      }
+      // Places vacantes (joueurs notés < count attendu)
+      for(var pj=bp.players.length;pj<bp.count;pj++){
+        h+='<div style="color:var(--tx3);font-style:italic;font-size:11px;padding:6px 10px;border:1px dashed var(--bg3);border-radius:8px;margin-bottom:4px;text-align:center">— Place vacante —</div>';
+      }
+    }
+    h+='</div>';
+  }
+  h+='</div></div>';
+
+  // SECTION 2 : TOP 10 GLOBAL
+  h+='<div class="fi-sec"><div class="fi-sec-t">🏆 Classement général</div>';
+  h+='<div style="padding:0 8px 8px">';
+  var topN=Math.min(10,stats.topGlobal.length);
+  if(!topN){
+    h+='<div style="color:var(--tx3);font-style:italic;text-align:center;padding:14px">Aucune note enregistrée</div>';
+  }
+  for(var ri=0;ri<topN;ri++){
+    var p=stats.topGlobal[ri];
+    var rank=ri+1;
+    var medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'<span style="color:var(--tx3);font-weight:700">#'+rank+'</span>';
+    var teamCol=p.team==='A'?m.tA.c:m.tB.c;
+    var teamN=p.team==='A'?m.tA.n:m.tB.n;
+    var nsTxt=p.ns?' <span style="color:var(--bl);font-size:9px">('+p.ns+' NS)</span>':'';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid var(--bg3);font-size:12px">';
+    h+='<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-size:13px;margin-right:6px">'+medal+'</span><span style="color:'+teamCol+';font-weight:600">'+esc(p.player)+'</span> <span style="color:var(--tx3);font-size:10px">'+esc(teamN)+'</span></span>';
+    h+='<span style="font-weight:800;color:var(--yl);flex-shrink:0;margin-left:8px">'+p.avg.toFixed(1).replace('.',',')+'<span style="color:var(--tx3);font-size:10px;font-weight:400">/10 ('+p.count+'×)</span>'+nsTxt+'</span>';
+    h+='</div>';
+  }
+  h+='</div></div>';
+
+  // SECTION 3 : TOP 3 PAR CRITERE (10 critères)
+  h+='<div class="fi-sec"><div class="fi-sec-t">🎯 Meilleurs par critère</div>';
+  h+='<div style="padding:0 10px 8px">';
+  var anyCrit=false;
+  for(var ci=0;ci<stats.topByCriterion.length;ci++){
+    var c=stats.topByCriterion[ci];
+    if(!c.top.length)continue;
+    anyCrit=true;
+    h+='<div style="border-bottom:1px solid var(--bg3);padding:10px 4px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--gn);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">'+esc(c.criterion)+'</div>';
+    for(var ti=0;ti<c.top.length;ti++){
+      var t=c.top[ti];
+      var medal2=ti===0?'🥇':ti===1?'🥈':'🥉';
+      var tcol=t.team==='A'?m.tA.c:m.tB.c;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0">';
+      h+='<span>'+medal2+' <span style="color:'+tcol+';font-weight:600">'+esc(t.player)+'</span></span>';
+      h+='<span style="color:var(--yl);font-weight:700">'+t.avg.toFixed(1).replace('.',',')+'/10</span>';
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  if(!anyCrit){
+    h+='<div style="color:var(--tx3);font-style:italic;text-align:center;padding:14px;font-size:12px">Aucun critère noté par les votants</div>';
+  }
+  h+='</div></div>';
+
+  document.getElementById('results-c').innerHTML=h;
+}
+
+// ============================================================
 // PAGE VOTANT (mode ?vote=<matchId>)
 // ============================================================
 var V_MODE=null,V_MATCHID=null,V_MATCH_DATA=null;
@@ -2310,6 +2607,72 @@ function delTeamData(id){
   var all=gAllTeams().filter(function(t){return t.id!==id});
   localStorage.setItem('arb_teams',JSON.stringify(all));
 }
+
+// Lot 4 v2 : export JSON de toutes les équipes (téléchargement local)
+window.exportTeams=function(){
+  var teams=gAllTeams();
+  if(!teams.length){toast('Aucune equipe a exporter');return}
+  var data={
+    type:'arbitre-sport-teams',
+    version:1,
+    exportedAt:new Date().toISOString(),
+    teams:teams
+  };
+  var json=JSON.stringify(data,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var d=new Date();
+  function pad2(n){return n<10?'0'+n:''+n}
+  var datestr=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  var filename='arbitre-equipes-'+datestr+'.json';
+  var a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  toast('✅ '+teams.length+' equipe(s) exportee(s)');
+};
+
+// Lot 4 v2 : import JSON (fusion par id, mise a jour si meme id, ajout si nouveau)
+window.importTeams=function(){
+  var input=document.createElement('input');
+  input.type='file';
+  input.accept='.json,application/json';
+  input.onchange=function(ev){
+    var file=ev.target.files&&ev.target.files[0];
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var data;
+      try{data=JSON.parse(e.target.result)}
+      catch(err){toast('❌ Fichier illisible');return}
+      if(!data||data.type!=='arbitre-sport-teams'||!data.teams||!data.teams.length){
+        toast('❌ Fichier non reconnu');return;
+      }
+      var nb=data.teams.length;
+      confirm2('Importer '+nb+' equipe(s) ? Les equipes avec le meme ID seront mises a jour, les autres ajoutees.',function(){
+        var existing=gAllTeams();
+        var existingIds={};
+        for(var i=0;i<existing.length;i++)existingIds[existing[i].id]=i;
+        var nbUpdated=0,nbNew=0;
+        for(var i=0;i<data.teams.length;i++){
+          var t=data.teams[i];
+          if(!t.id)t.id='t_'+Date.now()+'_'+i;
+          if(existingIds[t.id]!==undefined){
+            existing[existingIds[t.id]]=t;nbUpdated++;
+          }else{
+            existing.unshift(t);nbNew++;
+          }
+        }
+        localStorage.setItem('arb_teams',JSON.stringify(existing));
+        toast('✅ '+nbNew+' nouvelle(s) · '+nbUpdated+' mise(s) a jour');
+        if(typeof rTeams==='function')rTeams();
+        if(typeof updateTeamsCount==='function')updateTeamsCount();
+      });
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
 function ldTeam(id){
   var all=gAllTeams();
   for(var i=0;i<all.length;i++){if(all[i].id===id)return all[i]}
@@ -2954,7 +3317,7 @@ import { initializeApp }
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
          getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
          collection, onSnapshot, serverTimestamp, Timestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -2979,7 +3342,7 @@ window.AUTH_INSTANCE = auth;
 window.FB_DB = db;
 window.AUTH_USER = null;
 // Helpers Firestore exposés (utilisés par voteActivate, page votant, etc.)
-window.FB = { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, serverTimestamp, Timestamp };
+window.FB = { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, collection, onSnapshot, serverTimestamp, Timestamp };
 
 // ---------- Détection environnement ----------
 // signInWithPopup ne marche PAS dans :
