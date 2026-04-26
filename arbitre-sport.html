@@ -369,9 +369,53 @@ function init(){
   try{var s=localStorage.getItem('arb_snd');if(s==='0')AU.on=false}catch(e){}
   var sb=document.getElementById('snd-btn-home');
   if(sb){sb.textContent=AU.on?'🔊':'🔇';sb.className='hdr-btn'+(AU.on?' on':'')}
-  rSp();rCo();rDu();rHs();rAl();rPl();rHi();chkLive();
+  rSp();rCo();rDu();rHs();rAl();rPl();rHi();
+
+  // Gestion du paramètre URL ?match=<base64> (transfert depuis Foot Flash WebView)
+  // Si présent, on importe le match en localStorage et on affiche directement sa fiche
+  var importedMatchId=tryImportMatchFromURL();
+  if(importedMatchId){
+    rHi();           // re-render la liste pour inclure le match importé
+    showFi(importedMatchId);
+  }else{
+    chkLive();
+  }
+
   // Init audio context on first user gesture
   document.addEventListener('click',function once(){audInit();audResume();document.removeEventListener('click',once)},{once:true});
+}
+
+// Importe un match depuis le paramètre URL ?match=<base64>
+// Retourne l'ID du match importé, ou null si aucun
+function tryImportMatchFromURL(){
+  try{
+    var params=new URLSearchParams(window.location.search);
+    var b64=params.get('match');
+    if(!b64)return null;
+    // Décodage Unicode-safe (inverse de btoa(unescape(encodeURIComponent(...))))
+    var json=decodeURIComponent(escape(atob(b64)));
+    var m=JSON.parse(json);
+    if(!m || !m.id){console.warn('Match URL invalide');return null}
+    // Sauvegarde le match en localStorage (sans écraser s'il existe déjà avec plus d'infos)
+    var existing=ld(m.id);
+    if(!existing){
+      var all=gAll();
+      all.unshift(m);
+      localStorage.setItem('arb_m',JSON.stringify(all));
+      console.log('[URL] Match importé :',m.id);
+    }else{
+      console.log('[URL] Match déjà connu, on l\'affiche :',m.id);
+    }
+    // Nettoie l'URL (retire le paramètre pour éviter ré-import au refresh)
+    if(window.history && window.history.replaceState){
+      var cleanUrl=window.location.pathname+window.location.hash;
+      window.history.replaceState({},document.title,cleanUrl);
+    }
+    return m.id;
+  }catch(e){
+    console.error('Import match URL error:',e);
+    return null;
+  }
 }
 
 // PWA install prompt retire en v3 mono-fichier
@@ -764,20 +808,37 @@ function renderVotesSection(m,id){
 
 // Lance l'authentification (depuis l'écran fin de match uniquement)
 // Si on est dans la WebView Foot Flash : on ouvre Chrome sur l'URL GitHub Pages
-// (Google bloque l'auth dans les WebView depuis 2021)
-// Sinon : auth Firebase normale (popup ou redirect selon l'environnement)
+// avec le match encodé en base64 dans le paramètre ?match=
+// Si on est dans Chrome : auth Firebase normale
 window.voteSignIn=function(){
   // Détection Foot Flash via le bridge AndroidBridge.isFootFlashApp()
   var inFootFlash=false;
   try{inFootFlash=window.AndroidBridge && typeof window.AndroidBridge.isFootFlashApp==='function' && window.AndroidBridge.isFootFlashApp()===true}catch(e){}
 
   if(inFootFlash){
-    // On est dans Foot Flash → on ouvre Chrome système sur la version web
-    // L'arbitre se connectera là, et l'app uploadera le match à ce moment-là
-    var url='https://architechfr.github.io/Ideaforge/arbitre-sport.html?activate='+encodeURIComponent(getCurrentMatchId());
+    // Récupère le match courant et l'encode en base64 dans l'URL
+    var mid=getCurrentMatchId();
+    var m=mid?ld(mid):null;
+    if(!m){toast('Match introuvable');return}
+    var url;
+    try{
+      var json=JSON.stringify(m);
+      // Encode en base64 URL-safe (gère les caractères Unicode des noms d'équipes)
+      var b64=btoa(unescape(encodeURIComponent(json)));
+      url='https://architechfr.github.io/Ideaforge/arbitre-sport.html?match='+encodeURIComponent(b64);
+    }catch(e){
+      console.error('Encode match error:',e);
+      toast('Erreur encodage match');
+      return;
+    }
+    // Vérifier la longueur de l'URL (limite navigateur ~32 KB)
+    if(url.length>20000){
+      toast('Match trop volumineux pour transfert URL');
+      return;
+    }
     if(window.AndroidBridge.openExternal){
       window.AndroidBridge.openExternal(url);
-      toast('Ouverture du navigateur pour la connexion…');
+      toast('Ouverture du navigateur…');
     }else{
       toast('Bridge openExternal indisponible');
     }
