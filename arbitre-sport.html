@@ -185,13 +185,6 @@ body{display:flex;flex-direction:column}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 <div class="hero"><div class="hero-i">🏟️</div><div class="hero-n">ARBITRE Sport</div><div class="hero-s">Le cockpit de l'arbitre moderne</div></div>
 
-<!-- Bandeau d'authentification Google (synchronisation cloud) -->
-<div id="auth-bar" class="auth-bar">
-  <div id="auth-bar-content">
-    <div class="auth-loading">⏳ Initialisation…</div>
-  </div>
-</div>
-
 <div id="rz"></div>
 <button class="btn-big btn-new" onclick="goCfg()">🏟️ NOUVEAU MATCH</button>
 <div class="sec-t">Derniers matchs</div>
@@ -699,11 +692,101 @@ var sortedEv=m.ev.slice().sort(function(a,b){if(a.mn!==b.mn)return a.mn-b.mn;ret
 h+='<div class="fi-sec"><div class="fi-sec-t">📋 Événements</div>';
 for(var i=0;i<sortedEv.length;i++){var e=sortedEv[i];
 h+='<div class="fi-st" style="display:block;line-height:1.5"><span class="fi-st-l" style="font-size:12px">'+esc(evDesc(e,m))+'</span></div>'}h+='</div>'}
+h+='<div class="fi-sec" id="fi-votes-sec"><div class="fi-sec-t">🌟 Votes des joueurs</div>';
+h+='<div id="fi-votes-content" style="padding:12px 4px"></div>';
+h+='</div>';
 h+='<div class="fi-btns"><button class="fi-btn fi-btn-h" onclick="goH()">← Accueil</button>';
 h+='<button class="fi-btn fi-btn-s" onclick="share(\''+id+'\')">📋 Feuille de match</button>';
 h+='<button class="fi-btn fi-btn-d" onclick="del(\''+id+'\')">🗑️ Supprimer</button></div>';
-document.getElementById('fi-c').innerHTML=h;sh('fiche')}
+document.getElementById('fi-c').innerHTML=h;
+document.getElementById('fi-c').setAttribute('data-mid',id);
+sh('fiche');renderVotesSection(m,id)}
 function fSt(a,l,b){return'<div class="fi-st"><span class="fi-st-v">'+a+'</span><span class="fi-st-l">'+l+'</span><span class="fi-st-v">'+b+'</span></div>'}
+
+// Étape 3a : affichage de la zone "Votes des joueurs" sur la fiche fin de match
+// Trois états possibles :
+//   1) Pas connecté → bouton "Activer les votes" (déclenche l'auth Google)
+//   2) Connecté mais pas encore activé → bouton "Choisir les équipes notables"
+//   3) Votes activés → infos (lien, QR, compteur)
+function renderVotesSection(m,id){
+  var el=document.getElementById('fi-votes-content');
+  if(!el)return;
+  // Si match nul mode "vote déjà activé" (pour la 3b plus tard, on stocke ça dans m.voteOpen)
+  if(m.voteOpen){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--gn);font-weight:600">'+
+      '✓ Votes activés<div style="color:var(--tx2);font-size:11px;font-weight:400;margin-top:4px">(à venir : lien de partage et résultats)</div>'+
+      '</div>';
+    return;
+  }
+  // Match terminé sans votes activés → état selon auth
+  var user=window.AUTH_USER;
+  if(user){
+    // Connecté → bouton de confirmation pour activer
+    var avatar=user.photoURL
+      ?'<div class="auth-avatar" style="background-image:url(\''+user.photoURL+'\');width:24px;height:24px;display:inline-block;vertical-align:middle;margin-right:8px;border-radius:50%;background-size:cover"></div>'
+      :'<span style="margin-right:6px">👤</span>';
+    el.innerHTML=
+      '<div style="font-size:12px;color:var(--tx2);text-align:center;margin-bottom:12px">'+
+        avatar+'Connecté : '+esc(user.displayName||user.email)+
+        ' · <a href="#" onclick="event.preventDefault();voteSignOut()" style="color:var(--tx2);text-decoration:underline">Changer</a>'+
+      '</div>'+
+      '<button class="fi-btn fi-btn-s" style="width:100%" onclick="voteActivate(\''+id+'\')">'+
+        '🌟 Activer les votes des joueurs'+
+      '</button>'+
+      '<div style="font-size:11px;color:var(--tx2);text-align:center;margin-top:8px;line-height:1.4">'+
+        'Tu pourras choisir quelles équipes peuvent être notées'+
+      '</div>';
+  }else{
+    // Pas connecté → bouton qui lance l'auth
+    el.innerHTML=
+      '<div style="font-size:12px;color:var(--tx2);text-align:center;margin-bottom:12px;line-height:1.5">'+
+        'Permets aux spectateurs de noter les joueurs (0-10) après le match.<br>'+
+        'Le meilleur noté sera désigné Homme du Match 🏆'+
+      '</div>'+
+      '<button class="fi-btn" style="width:100%;background:#fff;color:#3c4043;border:1px solid #dadce0" onclick="voteSignIn()">'+
+        '<span style="font-weight:700;margin-right:8px">G</span>Se connecter pour activer les votes'+
+      '</button>'+
+      '<div style="font-size:10px;color:var(--tx3);text-align:center;margin-top:8px">'+
+        '⚠️ Connexion Google requise pour la centralisation des votes'+
+      '</div>';
+  }
+}
+
+// Lance l'authentification Google (depuis l'écran fin de match uniquement)
+window.voteSignIn=function(){
+  if(window.AUTH_SIGN_IN){
+    window.AUTH_SIGN_IN();
+  }else{
+    toast('Authentification non disponible');
+  }
+};
+
+// Déconnexion + re-rendu de la section votes
+window.voteSignOut=function(){
+  if(window.AUTH_SIGN_OUT){window.AUTH_SIGN_OUT()}
+};
+
+// Étape 3a : pour l'instant, juste un toast. L'upload Firestore arrive en 3b.
+window.voteActivate=function(id){
+  toast('🌟 Étape 3b : choix équipes + upload Firestore (à venir)');
+};
+
+// Hook : quand l'état d'auth change, on rerend la zone votes si elle est visible
+window.onAuthChanged=function(user){
+  // Si on est sur la fiche fin de match, on regénère la section votes
+  var screen=document.querySelector('.screen.on');
+  if(screen && screen.id==='s-fiche'){
+    var fiC=document.getElementById('fi-c');
+    if(fiC){
+      // On retrouve le match courant : inutile de tout regénérer, juste la section votes
+      // On reconstruit en rappelant showFi... mais on a besoin de l'ID du match
+      // Solution simple : on stocke l'ID en attribut data
+      var mid=fiC.getAttribute('data-mid');
+      if(mid){var m=ld(mid);if(m)renderVotesSection(m,mid)}
+    }
+  }
+};
+
 
 function share(id){var m=ld(id);if(!m)return;
 var sp=SP.find(function(s){return s.id===m.sport})||SP[0];
@@ -792,50 +875,31 @@ window.AUTH_INSTANCE = auth;
 window.AUTH_USER = null;
 
 // ---------- Détection environnement ----------
-// La WebView Android (Foot Flash) bloque souvent signInWithPopup.
-// Heuristique : userAgent contient "wv" ou "; wv)" pour les WebView Android.
+// signInWithPopup ne marche PAS dans :
+//   - une WebView Android pure (userAgent contient "wv")
+//   - une iframe à l'intérieur d'une WebView Android (Foot Flash → modal iframe)
+// Dans ces cas on bascule sur signInWithRedirect (plus robuste mais sort de l'app).
+function isInIframe() {
+  try { return window.self !== window.top; } catch (e) { return true; }
+}
 function isAndroidWebView() {
   const ua = navigator.userAgent || '';
-  return /\bwv\b/.test(ua) || /Version\/[\d.]+ Chrome\/[\d.]+ Mobile (Safari\/[\d.]+)?$/.test(ua) === false
-         && /Android/.test(ua) && /; wv\)/.test(ua);
+  // userAgent contient explicitement "; wv)" pour WebView Android
+  if (/;\s*wv\)/.test(ua)) return true;
+  // Heuristique secondaire : Android sans navigateur identifié
+  if (/Android/.test(ua) && !/Chrome\/\d+/.test(ua) && !/Firefox\/\d+/.test(ua)) return true;
+  return false;
 }
-const useRedirect = isAndroidWebView();
+// On force redirect dès qu'on est dans une iframe Android, c'est la plupart des cas Foot Flash
+const isAndroid = /Android/.test(navigator.userAgent || '');
+const useRedirect = isAndroidWebView() || (isInIframe() && isAndroid);
+console.log('[Auth] Environnement → iframe:', isInIframe(), '| WebView:', isAndroidWebView(), '| useRedirect:', useRedirect);
 
-// ---------- Rendu du bandeau ----------
-function renderAuthBar(user) {
-  const bar = document.getElementById('auth-bar');
-  const c   = document.getElementById('auth-bar-content');
-  if (!bar || !c) return;
-
-  if (user) {
-    bar.classList.add('connected');
-    const avatar = user.photoURL
-      ? `<div class="auth-avatar" style="background-image:url('${user.photoURL}')"></div>`
-      : `<div class="auth-avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px">👤</div>`;
-    c.innerHTML =
-      '<div class="auth-row">' +
-        avatar +
-        '<div class="auth-info">' +
-          '<div class="auth-name">' + (user.displayName || user.email || 'Utilisateur') + '</div>' +
-          '<div class="auth-status">✓ Connecté · Sync cloud activée</div>' +
-        '</div>' +
-        '<button class="auth-btn auth-btn-out" id="auth-signout">Déconnexion</button>' +
-      '</div>';
-    document.getElementById('auth-signout').onclick = doSignOut;
-  } else {
-    bar.classList.remove('connected');
-    c.innerHTML =
-      '<div class="auth-row">' +
-        '<div class="auth-info">' +
-          '<div class="auth-name">Mode local</div>' +
-          '<div class="auth-status disconnected">Connecte-toi pour synchroniser et activer les votes</div>' +
-        '</div>' +
-        '<button class="auth-btn" id="auth-signin">' +
-          '<span style="font-size:14px">G</span> Connexion' +
-        '</button>' +
-      '</div>' +
-      '<div class="auth-warn">⚠️ Sans connexion, l\'app fonctionne en local uniquement (pas de votes externes possibles).</div>';
-    document.getElementById('auth-signin').onclick = doSignIn;
+// ---------- Rendu (l'auth se déclenche désormais depuis la fiche fin de match) ----------
+// Plus de bandeau au démarrage : on notifie juste le reste de l'app via window.onAuthChanged
+function notifyAuthChanged(user) {
+  if (typeof window.onAuthChanged === 'function') {
+    try { window.onAuthChanged(user); } catch (e) { console.warn(e); }
   }
 }
 
@@ -886,9 +950,10 @@ getRedirectResult(auth).catch(function(e) {
 // ---------- Observer l'état d'authentification ----------
 onAuthStateChanged(auth, function(user) {
   window.AUTH_USER = user;
-  renderAuthBar(user);
+  notifyAuthChanged(user);
   if (user) {
     console.log('[Auth] Connecté comme', user.displayName, user.uid);
+    if (typeof window.toast === 'function') window.toast('✓ Connecté : ' + (user.displayName || user.email));
   } else {
     console.log('[Auth] Non connecté (mode local)');
   }
