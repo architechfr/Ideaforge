@@ -371,14 +371,19 @@ function init(){
   if(sb){sb.textContent=AU.on?'🔊':'🔇';sb.className='hdr-btn'+(AU.on?' on':'')}
   rSp();rCo();rDu();rHs();rAl();rPl();rHi();
 
+  // Gestion du paramètre URL ?vote=<matchId> (mode votant)
+  if(tryVoteModeFromURL()){
+    showVotePage(V_MATCHID);
+  }
   // Gestion du paramètre URL ?match=<base64> (transfert depuis Foot Flash WebView)
-  // Si présent, on importe le match en localStorage et on affiche directement sa fiche
-  var importedMatchId=tryImportMatchFromURL();
-  if(importedMatchId){
-    rHi();           // re-render la liste pour inclure le match importé
-    showFi(importedMatchId);
-  }else{
-    chkLive();
+  else{
+    var importedMatchId=tryImportMatchFromURL();
+    if(importedMatchId){
+      rHi();
+      showFi(importedMatchId);
+    }else{
+      chkLive();
+    }
   }
 
   // Init audio context on first user gesture
@@ -755,15 +760,37 @@ function fSt(a,l,b){return'<div class="fi-st"><span class="fi-st-v">'+a+'</span>
 function renderVotesSection(m,id){
   var el=document.getElementById('fi-votes-content');
   if(!el)return;
-  // Si match nul mode "vote déjà activé" (pour la 3b plus tard, on stocke ça dans m.voteOpen)
+
+  // ÉTAT 3 : Votes activés
   if(m.voteOpen){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--gn);font-weight:600">'+
-      '✓ Votes activés<div style="color:var(--tx2);font-size:11px;font-weight:400;margin-top:4px">(à venir : lien de partage et résultats)</div>'+
-      '</div>';
+    var voteUrl='https://architechfr.github.io/Ideaforge/arbitre-sport.html?vote='+encodeURIComponent(m.id);
+    var closesAtStr='';
+    if(m.voteClosesAt){
+      var d=new Date(m.voteClosesAt);
+      closesAtStr=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+    var teamsStr=(m.votableTeams||['A','B']).map(function(t){return t==='A'?m.tA.n:m.tB.n}).join(' & ');
+    el.innerHTML=
+      '<div style="text-align:center;color:var(--gn);font-weight:700;margin-bottom:8px">'+
+        '🟢 Votes ouverts'+(closesAtStr?' — clôture '+closesAtStr:'')+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:12px">Équipes notables : '+esc(teamsStr)+'</div>'+
+      '<div style="background:var(--bg3);border:1px solid var(--gn);border-radius:8px;padding:8px;margin-bottom:8px;display:flex;align-items:center;gap:6px">'+
+        '<input type="text" readonly value="'+esc(voteUrl)+'" id="vote-url" style="flex:1;background:transparent;border:none;color:var(--tx);font-size:11px;font-family:ui-monospace,monospace;outline:none">'+
+        '<button onclick="copyVoteUrl()" style="background:var(--gn);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">📋</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;margin-bottom:14px">'+
+        '<button class="fi-btn fi-btn-s" style="flex:1" onclick="shareVoteUrl()">📤 Partager</button>'+
+        '<button class="fi-btn fi-btn-h" style="flex:1" onclick="goToVote(\''+id+'\')">🗳️ Voter aussi</button>'+
+      '</div>'+
+      '<div id="vote-live" style="background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:10px;margin-bottom:8px"><div style="text-align:center;color:var(--tx2);font-size:11px">⏳ Connexion au flux des votes…</div></div>'+
+      '<button class="fi-btn fi-btn-d" style="width:100%;margin-top:8px" onclick="closeVotes(\''+id+'\')">❌ Fermer les votes maintenant</button>';
+    // Démarre l'écoute live
+    startVoteListener(id);
     return;
   }
-  // Match terminé sans votes activés → état selon auth
-  // Détection Foot Flash pour adapter le message
+
+  // ÉTAT 1/2 : selon connexion
   var inFootFlash=false;
   try{inFootFlash=window.AndroidBridge && typeof window.AndroidBridge.isFootFlashApp==='function' && window.AndroidBridge.isFootFlashApp()===true}catch(e){}
 
@@ -864,21 +891,417 @@ window.voteSignOut=function(){
   if(window.AUTH_SIGN_OUT){window.AUTH_SIGN_OUT()}
 };
 
-// Étape 3a : pour l'instant, juste un toast. L'upload Firestore arrive en 3b.
+// Étape 3b : modal "Activer les votes"
+// Demande à l'arbitre quelles équipes peuvent être notées, puis upload Firestore
 window.voteActivate=function(id){
-  toast('🌟 Étape 3b : choix équipes + upload Firestore (à venir)');
+  if(!window.AUTH_USER){toast('Connecte-toi d\'abord');return}
+  if(!window.FB_DB){toast('Firestore non disponible');return}
+  var m=ld(id);if(!m){toast('Match introuvable');return}
+
+  // Modal avec cases à cocher
+  var h='<div class="mo-t">🌟 Activer les votes</div>';
+  h+='<div style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.5">Quelles équipes peuvent être notées par les spectateurs ?</div>';
+  h+='<label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:8px;cursor:pointer">';
+  h+='<input type="checkbox" id="vt-A" checked style="width:20px;height:20px;accent-color:'+m.tA.c+'">';
+  h+='<span style="font-weight:600;color:'+m.tA.c+'">'+esc(m.tA.n)+'</span>';
+  h+='</label>';
+  h+='<label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:14px;cursor:pointer">';
+  h+='<input type="checkbox" id="vt-B" checked style="width:20px;height:20px;accent-color:'+m.tB.c+'">';
+  h+='<span style="font-weight:600;color:'+m.tB.c+'">'+esc(m.tB.n)+'</span>';
+  h+='</label>';
+  h+='<div style="font-size:11px;color:var(--tx3);margin-bottom:14px;line-height:1.4">📅 Les votes seront ouverts pendant <b>48 heures</b>.</div>';
+  h+='<div style="display:flex;gap:8px">';
+  h+='<button class="mo-btn" style="flex:1;background:var(--bg3);color:var(--tx2)" onclick="clMo()">Annuler</button>';
+  h+='<button class="mo-btn" style="flex:2;background:var(--gn);color:#fff;font-weight:700" onclick="voteUpload(\''+id+'\')">🚀 Lancer les votes</button>';
+  h+='</div>';
+  showMo(h);
+};
+
+// Upload effectif du match dans Firestore
+window.voteUpload=async function(id){
+  var m=ld(id);if(!m)return;
+  var votableA=document.getElementById('vt-A').checked;
+  var votableB=document.getElementById('vt-B').checked;
+  if(!votableA && !votableB){toast('Coche au moins une équipe');return}
+  var votableTeams=[];if(votableA)votableTeams.push('A');if(votableB)votableTeams.push('B');
+
+  var u=window.AUTH_USER;
+  var FB=window.FB,db=window.FB_DB;
+  if(!u||!FB||!db){toast('Erreur connexion');return}
+
+  // Désactive le bouton pendant l'upload
+  var btns=document.querySelectorAll('.mo-btn');for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+  toast('📤 Upload en cours…');
+
+  try{
+    var now=Date.now();
+    var closesAt=now+48*60*60*1000; // +48h
+    var matchDoc={
+      id:m.id,
+      sport:m.sport,
+      tA:m.tA, tB:m.tB,
+      sA:m.sA, sB:m.sB,
+      ev:m.ev||[],
+      cfg:m.cfg||{},
+      ca:m.ca||now,
+      st:'finished',
+      voteOpen:true,
+      voteClosesAt:FB.Timestamp.fromMillis(closesAt),
+      votableTeams:votableTeams,
+      createdBy:u.uid,
+      createdByName:u.displayName||u.email||'Arbitre',
+      createdAt:FB.serverTimestamp(),
+      season:getSeason()
+    };
+    await FB.setDoc(FB.doc(db,'matches',m.id),matchDoc);
+
+    // Stocke l'état localement pour ne pas réuploader
+    m.voteOpen=true;
+    m.voteClosesAt=closesAt;
+    m.votableTeams=votableTeams;
+    sav();
+
+    clMo();
+    toast('✅ Votes ouverts !');
+    showFi(id); // re-render la fiche avec les nouvelles infos
+  }catch(e){
+    console.error('Upload error:',e);
+    toast('❌ Erreur : '+(e.code||e.message||'inconnue'));
+    for(var i=0;i<btns.length;i++)btns[i].disabled=false;
+  }
+};
+
+// Saison courante (ex: "2025-2026" si on est entre août 2025 et juillet 2026)
+function getSeason(){
+  var d=new Date(),y=d.getFullYear(),m=d.getMonth();
+  return m>=7?(y+'-'+(y+1)):((y-1)+'-'+y);
+}
+
+// Helper : affiche une modal personnalisée dans #mo-c
+function showMo(html){
+  var mc=document.getElementById('mo-c');
+  if(!mc)return;
+  mc.innerHTML=html;
+  document.getElementById('mo-bg').className='mo-bg show';
+}
+
+// ============================================================
+// ÉTAPE 3b : Helpers post-activation des votes
+// ============================================================
+
+// Copie l'URL du vote dans le presse-papiers
+window.copyVoteUrl=function(){
+  var inp=document.getElementById('vote-url');
+  if(!inp)return;
+  cpTx(inp.value);
+  toast('🔗 Lien copié !');
+};
+
+// Partage via Web Share API (WhatsApp, SMS, etc.)
+window.shareVoteUrl=function(){
+  var inp=document.getElementById('vote-url');
+  if(!inp)return;
+  var url=inp.value;
+  var msg='🌟 Vote pour l\'homme du match !\n\n'+url+'\n\n(connexion Google requise)';
+  if(navigator.share){
+    navigator.share({title:'Vote homme du match',text:msg,url:url}).catch(function(){})
+  }else{
+    cpTx(msg);
+    toast('📋 Message copié !');
+  }
+};
+
+// Active le mode votant pour l'arbitre lui-même
+window.goToVote=function(id){
+  // Ouvre la page votant en chargeant l'URL ?vote=
+  // Plus simple : on stocke le mode et on regénère le rendu
+  V_MODE='vote';V_MATCHID=id;
+  showVotePage(id);
+};
+
+// Ferme manuellement les votes (avant les 48h)
+window.closeVotes=function(id){
+  confirm2('Fermer définitivement les votes ?',async function(){
+    var FB=window.FB,db=window.FB_DB;
+    if(!FB||!db){toast('Firestore indisponible');return}
+    try{
+      await FB.updateDoc(FB.doc(db,'matches',id),{voteOpen:false});
+      var m=ld(id);if(m){m.voteOpen=false;sav()}
+      toast('🔒 Votes fermés');
+      stopVoteListener();
+      showFi(id);
+    }catch(e){
+      console.error(e);toast('Erreur : '+(e.code||e.message));
+    }
+  });
+};
+
+// ============================================================
+// Listener live des votes (Firestore onSnapshot)
+// ============================================================
+var _voteUnsub=null;
+function startVoteListener(matchId){
+  stopVoteListener();
+  var FB=window.FB,db=window.FB_DB;
+  if(!FB||!db||!window.AUTH_USER)return;
+  try{
+    var votesCol=FB.collection(db,'matches',matchId,'votes');
+    _voteUnsub=FB.onSnapshot(votesCol,function(snap){
+      var votes=[];
+      snap.forEach(function(d){votes.push(d.data())});
+      renderVoteLive(matchId,votes);
+    },function(err){
+      console.error('Vote listener error:',err);
+      var el=document.getElementById('vote-live');
+      if(el)el.innerHTML='<div style="color:var(--rd);font-size:11px;text-align:center">⚠️ Erreur flux : '+(err.code||err.message)+'</div>';
+    });
+  }catch(e){console.error(e)}
+}
+function stopVoteListener(){
+  if(_voteUnsub){try{_voteUnsub()}catch(e){}_voteUnsub=null}
+}
+
+// Calcule la moyenne par joueur et affiche
+function renderVoteLive(matchId,votes){
+  var el=document.getElementById('vote-live');
+  if(!el)return;
+  var m=ld(matchId);if(!m)return;
+
+  if(!votes.length){
+    el.innerHTML='<div style="text-align:center;color:var(--tx2);font-size:12px;padding:8px">'+
+      '🗳️ <b>0 vote</b> reçu pour l\'instant<div style="font-size:10px;margin-top:4px">Partage le lien aux spectateurs</div></div>';
+    return;
+  }
+
+  // Agrégation : pour chaque "key" (équipe:numéro), calculer moyenne et nb votes
+  var stats={}; // {key: {sum, count, label, team}}
+  for(var i=0;i<votes.length;i++){
+    var v=votes[i];if(!v.ratings)continue;
+    for(var key in v.ratings){
+      var r=v.ratings[key];
+      if(typeof r!=='number')continue;
+      if(!stats[key])stats[key]={sum:0,count:0,key:key};
+      stats[key].sum+=r;stats[key].count++;
+    }
+  }
+  // Tri par moyenne décroissante
+  var arr=[];for(var k in stats){var s=stats[k];s.avg=s.sum/s.count;arr.push(s)}
+  arr.sort(function(a,b){return b.avg-a.avg});
+
+  // Trouve l'homme du match (min 1 vote pour calculer immédiatement, comme demandé)
+  var motm=arr.length?arr[0]:null;
+
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<span style="font-size:12px;color:var(--tx2)">🗳️ <b>'+votes.length+'</b> vote'+(votes.length>1?'s':'')+'</span>';
+  if(motm){
+    var p=motm.key.split(':'),tn=p[0]==='A'?m.tA.n:m.tB.n;
+    h+='<span style="font-size:11px;color:var(--gn);font-weight:600">🏆 '+esc(p[1])+' ('+esc(tn)+') · '+motm.avg.toFixed(1)+'/10</span>';
+  }
+  h+='</div>';
+
+  // Top 5 joueurs
+  h+='<div style="border-top:1px solid var(--bg3);padding-top:6px">';
+  for(var i=0;i<Math.min(5,arr.length);i++){
+    var s=arr[i],pp=s.key.split(':'),tnn=pp[0]==='A'?m.tA.n:m.tB.n,col=pp[0]==='A'?m.tA.c:m.tB.c;
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">';
+    h+='<span><span style="color:'+col+';font-weight:600">'+esc(pp[1])+'</span> <span style="color:var(--tx3);font-size:10px">'+esc(tnn)+'</span></span>';
+    h+='<span style="font-weight:700;color:var(--tx)">'+s.avg.toFixed(1)+' <span style="color:var(--tx3);font-size:10px;font-weight:400">('+s.count+'×)</span></span>';
+    h+='</div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ============================================================
+// PAGE VOTANT (mode ?vote=<matchId>)
+// ============================================================
+var V_MODE=null,V_MATCHID=null,V_MATCH_DATA=null;
+
+// Au démarrage, détecte le paramètre ?vote=
+function tryVoteModeFromURL(){
+  try{
+    var params=new URLSearchParams(window.location.search);
+    var voteId=params.get('vote');
+    if(!voteId)return false;
+    V_MODE='vote';V_MATCHID=voteId;
+    return true;
+  }catch(e){return false}
+}
+
+// Affiche la page votant (avec téléchargement Firestore)
+async function showVotePage(matchId){
+  // Si pas de match en mémoire, on télécharge depuis Firestore
+  var FB=window.FB,db=window.FB_DB;
+  if(!FB||!db){toast('Firestore indisponible');return}
+
+  // Affiche un écran de chargement
+  document.getElementById('fi-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--tx2)">⏳ Chargement du match…</div>';
+  sh('fiche');
+
+  try{
+    var snap=await FB.getDoc(FB.doc(db,'matches',matchId));
+    if(!snap.exists()){
+      document.getElementById('fi-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--rd)">❌ Match introuvable<br><br><button class="fi-btn fi-btn-h" onclick="goH()">← Accueil</button></div>';
+      return;
+    }
+    V_MATCH_DATA=snap.data();
+    renderVotePage();
+  }catch(e){
+    console.error(e);
+    document.getElementById('fi-c').innerHTML='<div style="padding:40px;text-align:center;color:var(--rd)">❌ Erreur : '+(e.code||e.message)+'<br><br><button class="fi-btn fi-btn-h" onclick="goH()">← Accueil</button></div>';
+  }
+}
+
+// Rendu de la page votant
+function renderVotePage(){
+  var m=V_MATCH_DATA;if(!m)return;
+  var u=window.AUTH_USER;
+
+  // Si pas connecté, demande l'auth
+  if(!u){
+    document.getElementById('fi-c').innerHTML=
+      '<div style="padding:24px;text-align:center">'+
+        '<div style="font-size:44px;margin-bottom:14px">🗳️</div>'+
+        '<div style="font-size:16px;font-weight:700;margin-bottom:8px">Vote homme du match</div>'+
+        '<div style="font-size:13px;color:var(--tx2);margin-bottom:6px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>'+
+        '<div style="font-size:11px;color:var(--tx3);margin-bottom:24px">Connecte-toi pour noter les joueurs (0-10).<br>Tu pourras modifier ton vote pendant 48h.</div>'+
+        '<button class="fi-btn" style="width:100%;background:#fff;color:#3c4043;border:1px solid #dadce0" onclick="voteSignInDirect()">'+
+          '<span style="font-weight:700;margin-right:8px">G</span>Se connecter avec Google'+
+        '</button>'+
+      '</div>';
+    return;
+  }
+
+  // Vérifier que les votes sont ouverts
+  var closesAt=m.voteClosesAt&&m.voteClosesAt.toMillis?m.voteClosesAt.toMillis():(m.voteClosesAt||0);
+  var voteClosed=!m.voteOpen||(closesAt&&Date.now()>closesAt);
+  if(voteClosed){
+    document.getElementById('fi-c').innerHTML=
+      '<div style="padding:30px;text-align:center">'+
+        '<div style="font-size:44px;margin-bottom:14px">🔒</div>'+
+        '<div style="font-size:16px;font-weight:700;margin-bottom:8px">Votes fermés</div>'+
+        '<div style="font-size:13px;color:var(--tx2);margin-bottom:14px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>'+
+        '<button class="fi-btn fi-btn-h" onclick="goH()">← Accueil</button>'+
+      '</div>';
+    return;
+  }
+
+  // Construire la liste des joueurs notables
+  var votableTeams=m.votableTeams||['A','B'];
+  var allPlayers=[];
+  for(var ti=0;ti<votableTeams.length;ti++){
+    var t=votableTeams[ti],ti_obj=t==='A'?m.tA:m.tB;
+    if(ti_obj.p&&ti_obj.p.length){
+      for(var pi=0;pi<ti_obj.p.length;pi++){
+        allPlayers.push({team:t,num:ti_obj.p[pi],teamName:ti_obj.n,color:ti_obj.c});
+      }
+    }
+  }
+
+  // Charger les notes existantes du votant
+  V_RATINGS={};
+  var FB=window.FB,db=window.FB_DB;
+  FB.getDoc(FB.doc(db,'matches',V_MATCHID,'votes',u.uid)).then(function(s){
+    if(s.exists()){
+      var d=s.data();V_RATINGS=d.ratings||{};
+      // Re-render pour afficher les valeurs déjà saisies
+      var sliders=document.querySelectorAll('.vt-slider');
+      for(var i=0;i<sliders.length;i++){
+        var k=sliders[i].dataset.key;
+        if(V_RATINGS[k]!==undefined){
+          sliders[i].value=V_RATINGS[k];
+          var disp=document.getElementById('vd-'+k.replace(':','-').replace('#',''));
+          if(disp)disp.textContent=Number(V_RATINGS[k]).toFixed(1);
+        }
+      }
+      var sb=document.getElementById('vt-submit');
+      if(sb)sb.textContent='💾 Mettre à jour mes notes';
+    }
+  }).catch(function(){});
+
+  var h='';
+  h+='<div class="hdr" style="position:sticky;top:0;z-index:5"><button class="hdr-back" onclick="goH()">‹</button><div class="hdr-t">🗳️ MES NOTES</div><div style="width:44px"></div></div>';
+  h+='<div style="padding:14px">';
+  h+='<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:4px">'+esc(m.tA.n)+' '+m.sA+' - '+m.sB+' '+esc(m.tB.n)+'</div>';
+  h+='<div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:14px">Note chaque joueur de 0 à 10</div>';
+
+  // Joueurs groupés par équipe
+  var lastTeam='';
+  for(var i=0;i<allPlayers.length;i++){
+    var p=allPlayers[i];
+    if(p.team!==lastTeam){
+      h+='<div style="font-weight:700;color:'+p.color+';margin:14px 0 8px;font-size:13px">'+esc(p.teamName)+'</div>';
+      lastTeam=p.team;
+    }
+    var key=p.team+':'+p.num;
+    var safeKey=key.replace(':','-').replace('#','');
+    h+='<div style="background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:6px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    h+='<span style="font-weight:600">'+esc(p.num)+'</span>';
+    h+='<span id="vd-'+safeKey+'" style="font-weight:700;color:var(--gn)">5.0</span>';
+    h+='</div>';
+    h+='<input type="range" class="vt-slider" data-key="'+esc(key)+'" min="0" max="10" step="0.5" value="5" '+
+       'oninput="document.getElementById(\'vd-'+safeKey+'\').textContent=parseFloat(this.value).toFixed(1);V_RATINGS[\''+esc(key)+'\']=parseFloat(this.value)" '+
+       'style="width:100%">';
+    h+='</div>';
+  }
+
+  h+='<button class="fi-btn fi-btn-s" id="vt-submit" style="width:100%;margin-top:14px;padding:14px" onclick="submitVote()">✅ Soumettre mes notes</button>';
+  h+='<div style="font-size:10px;color:var(--tx3);text-align:center;margin-top:8px">Tu pourras modifier ton vote pendant 48h</div>';
+  h+='</div>';
+
+  document.getElementById('fi-c').innerHTML=h;
+}
+
+var V_RATINGS={};
+
+// Soumettre le vote dans Firestore
+window.submitVote=async function(){
+  var u=window.AUTH_USER;
+  if(!u){toast('Non connecté');return}
+  var FB=window.FB,db=window.FB_DB;
+  if(!FB||!db){toast('Firestore indisponible');return}
+  if(Object.keys(V_RATINGS).length===0){toast('Note au moins un joueur');return}
+
+  var btn=document.getElementById('vt-submit');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Envoi…'}
+
+  try{
+    await FB.setDoc(FB.doc(db,'matches',V_MATCHID,'votes',u.uid),{
+      uid:u.uid,
+      displayName:u.displayName||'',
+      email:u.email||'',
+      ratings:V_RATINGS,
+      createdAt:FB.serverTimestamp(),
+      updatedAt:FB.serverTimestamp()
+    });
+    toast('✅ Vote enregistré !');
+    if(btn){btn.disabled=false;btn.textContent='💾 Mettre à jour mes notes';btn.style.background='rgba(34,197,94,.2)'}
+  }catch(e){
+    console.error(e);
+    toast('❌ '+(e.code||e.message));
+    if(btn){btn.disabled=false;btn.textContent='✅ Soumettre mes notes'}
+  }
+};
+
+// Auth depuis la page votant (pas Foot Flash, donc auth Firebase directe)
+window.voteSignInDirect=function(){
+  if(window.AUTH_SIGN_IN)window.AUTH_SIGN_IN();
 };
 
 // Hook : quand l'état d'auth change, on rerend la zone votes si elle est visible
 window.onAuthChanged=function(user){
+  // Si on est en mode votant (?vote=), regénérer la page de notation
+  if(V_MODE==='vote' && V_MATCHID){
+    if(V_MATCH_DATA){renderVotePage()}
+    else{showVotePage(V_MATCHID)}
+    return;
+  }
   // Si on est sur la fiche fin de match, on regénère la section votes
   var screen=document.querySelector('.screen.on');
   if(screen && screen.id==='s-fiche'){
     var fiC=document.getElementById('fi-c');
     if(fiC){
-      // On retrouve le match courant : inutile de tout regénérer, juste la section votes
-      // On reconstruit en rappelant showFi... mais on a besoin de l'ID du match
-      // Solution simple : on stocke l'ID en attribut data
       var mid=fiC.getAttribute('data-mid');
       if(mid){var m=ld(mid);if(m)renderVotesSection(m,mid)}
     }
@@ -952,6 +1375,9 @@ import { initializeApp }
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
          getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+         collection, onSnapshot, serverTimestamp, Timestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCsAHr2QpRwL-LiC_hawce_rbWyOAl-wrc",
@@ -965,12 +1391,16 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Exposé pour le reste de l'app (étapes suivantes utiliseront window.AUTH_USER)
+// Exposé pour le reste de l'app
 window.AUTH_APP = app;
 window.AUTH_INSTANCE = auth;
+window.FB_DB = db;
 window.AUTH_USER = null;
+// Helpers Firestore exposés (utilisés par voteActivate, page votant, etc.)
+window.FB = { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, serverTimestamp, Timestamp };
 
 // ---------- Détection environnement ----------
 // signInWithPopup ne marche PAS dans :
