@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Match">
@@ -18,7 +18,7 @@
 --rd:#ef4444;--yl:#facc15;--bl:#3b82f6;--or:#f97316;--pk:#ec4899;
 --r:10px}
 html,body{height:100%;overflow:hidden;font-family:'SF Pro Display',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--tx)}
-body{display:flex;flex-direction:column}
+body{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
 .hdr{display:flex;align-items:center;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--bg3);flex-shrink:0;min-height:48px}
 .hdr-back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--tx2);font-size:24px;cursor:pointer;border-radius:8px}
 .hdr-back:active{background:var(--bg3)}
@@ -151,7 +151,7 @@ body{display:flex;flex-direction:column}
 /* MODAL */
 .mo-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;justify-content:center}
 .mo-bg.show{display:flex}
-.mo{background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:420px;max-height:70vh;overflow-y:auto}
+.mo{background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));width:100%;max-width:420px;max-height:70vh;overflow-y:auto}
 .mo-t{font-size:15px;font-weight:800;margin-bottom:12px;text-align:center}
 .mo-btns{display:flex;gap:8px}
 .mo-btn{flex:1;padding:13px;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
@@ -2068,13 +2068,29 @@ function renderVoteLive(matchId,votes){
 // ============================================================
 
 // Mapping de poste par convention 4-3-3 (#1=GK, #2-5=DEF, #6-8=MID, #9-11=ATT, R*=DEF/MID/ATT)
+// Lot GK : détection auto du gardien de relais (Rx qui remplace #1 directement → devient GK)
 // Override possible via M.tA.pos = {playerName: 'GK'|'DEF'|'MID'|'ATT'}
 function getPlayerPos(team,player){
   if(!player)return 'MID';
   var teamObj=null;
+  // Le match peut être lu de 2 manières : M (en cours) ou window.V_MATCH_DATA (page votant) ou contexte fiche
   if(M){teamObj=team==='A'?M.tA:team==='B'?M.tB:null}
-  // (en mode résultats, M peut être undefined : on utilise alors le match courant fourni autrement)
+  else if(window.V_MATCH_DATA){teamObj=team==='A'?window.V_MATCH_DATA.tA:team==='B'?window.V_MATCH_DATA.tB:null}
+  // Override manuel
   if(teamObj&&teamObj.pos&&teamObj.pos[player])return teamObj.pos[player];
+  // Lot GK : détection automatique du gardien de relais via les events sub
+  // Si ce joueur (Rx) est entré directement à la place de #1, il devient GK
+  var ev=null;
+  if(M&&M.ev)ev=M.ev;
+  else if(window.V_MATCH_DATA&&window.V_MATCH_DATA.ev)ev=window.V_MATCH_DATA.ev;
+  if(ev&&String(player).match(/^R\d+$/)){
+    for(var i=0;i<ev.length;i++){
+      var e=ev[i];
+      if(e.tp==='sub'&&e.t===team&&e.inn===player&&(e.out==='#1'||e.out==='1')){
+        return 'GK';
+      }
+    }
+  }
   // Convention #N
   var m1=String(player).match(/^#?(\d+)$/);
   if(m1){
@@ -2153,17 +2169,25 @@ function computeFinalStats(m,votes){
     });
   }
   topGlobal.sort(function(a,b){return b.avg-a.avg});
-  // Top 3 par critère
-  var topByCriterion=[];
+  // Lot GK : top 3 par critère, séparé entre joueurs de champ (CRITERES) et gardiens (CRITERES_GK)
+  // On regroupe d'abord les joueurs par bucket de poste pour itérer chaque liste avec le bon libellé
+  var topByCriterion=[];        // joueurs de champ (DEF/MID/ATT)
+  var topByCriterionGK=[];      // gardiens
+  // Pour chaque indice de critère
   for(var ci=0;ci<CRITERES.length;ci++){
-    var arr=[];
+    var arrField=[],arrGK=[];
     for(var pk in critSum){
       if(critSum[pk][ci]===undefined||!critCnt[pk][ci])continue;
       var pp=pk.split(':');
-      arr.push({team:pp[0],player:pp[1],avg:critSum[pk][ci]/critCnt[pk][ci],count:critCnt[pk][ci]});
+      var pPos=getPlayerPos(pp[0],pp[1]);
+      var entry={team:pp[0],player:pp[1],avg:critSum[pk][ci]/critCnt[pk][ci],count:critCnt[pk][ci]};
+      if(pPos==='GK')arrGK.push(entry);
+      else arrField.push(entry);
     }
-    arr.sort(function(a,b){return b.avg-a.avg});
-    topByCriterion.push({criterion:CRITERES[ci],top:arr.slice(0,3)});
+    arrField.sort(function(a,b){return b.avg-a.avg});
+    arrGK.sort(function(a,b){return b.avg-a.avg});
+    topByCriterion.push({criterion:CRITERES[ci],top:arrField.slice(0,3)});
+    topByCriterionGK.push({criterion:CRITERES_GK[ci],top:arrGK.slice(0,3)});
   }
   // Top 11 par poste (4-3-3)
   var byPos={GK:[],DEF:[],MID:[],ATT:[]};
@@ -2177,7 +2201,7 @@ function computeFinalStats(m,votes){
     {pos:'MID',label:'⚙️ Milieu',count:3,players:byPos.MID.slice(0,3)},
     {pos:'ATT',label:'⚔️ Attaque',count:3,players:byPos.ATT.slice(0,3)}
   ];
-  return {voteCount:votes.length,topGlobal:topGlobal,topByCriterion:topByCriterion,bestEleven:bestEleven};
+  return {voteCount:votes.length,topGlobal:topGlobal,topByCriterion:topByCriterion,topByCriterionGK:topByCriterionGK,bestEleven:bestEleven};
 }
 
 // Page résultats : ouvrir l'écran et déclencher le chargement async
@@ -2257,8 +2281,8 @@ function renderResultsPage(m,stats){
   }
   h+='</div></div>';
 
-  // SECTION 3 : TOP 3 PAR CRITERE (10 critères)
-  h+='<div class="fi-sec"><div class="fi-sec-t">🎯 Meilleurs par critère</div>';
+  // SECTION 3 : TOP 3 PAR CRITERE — joueurs de champ
+  h+='<div class="fi-sec"><div class="fi-sec-t">🎯 Meilleurs par critère (joueurs de champ)</div>';
   h+='<div style="padding:0 10px 8px">';
   var anyCrit=false;
   for(var ci=0;ci<stats.topByCriterion.length;ci++){
@@ -2279,9 +2303,38 @@ function renderResultsPage(m,stats){
     h+='</div>';
   }
   if(!anyCrit){
-    h+='<div style="color:var(--tx3);font-style:italic;text-align:center;padding:14px;font-size:12px">Aucun critère noté par les votants</div>';
+    h+='<div style="color:var(--tx3);font-style:italic;text-align:center;padding:14px;font-size:12px">Aucun critère noté</div>';
   }
   h+='</div></div>';
+
+  // SECTION 4 : TOP 3 PAR CRITERE — gardiens (affichée seulement si au moins un GK noté)
+  var anyGK=false;
+  if(stats.topByCriterionGK){
+    for(var cg=0;cg<stats.topByCriterionGK.length;cg++){
+      if(stats.topByCriterionGK[cg].top.length){anyGK=true;break}
+    }
+  }
+  if(anyGK){
+    h+='<div class="fi-sec"><div class="fi-sec-t">🥅 Meilleurs gardiens par critère</div>';
+    h+='<div style="padding:0 10px 8px">';
+    for(var ci=0;ci<stats.topByCriterionGK.length;ci++){
+      var cg2=stats.topByCriterionGK[ci];
+      if(!cg2.top.length)continue;
+      h+='<div style="border-bottom:1px solid var(--bg3);padding:10px 4px">';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">'+esc(cg2.criterion)+'</div>';
+      for(var ti=0;ti<cg2.top.length;ti++){
+        var tg=cg2.top[ti];
+        var medal3=ti===0?'🥇':ti===1?'🥈':'🥉';
+        var tcg=tg.team==='A'?m.tA.c:m.tB.c;
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0">';
+        h+='<span>'+medal3+' <span style="color:'+tcg+';font-weight:600">'+esc(tg.player)+'</span></span>';
+        h+='<span style="color:var(--yl);font-weight:700">'+tg.avg.toFixed(1).replace('.',',')+'/10</span>';
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
 
   document.getElementById('results-c').innerHTML=h;
 }
@@ -2448,12 +2501,14 @@ function renderVotePage(){
       h+='</span>';
     }
     h+='</div>';
-    // Lot 4 : section 10 criteres detailles
+    // Lot 4 : section 10 criteres detailles (Lot GK : liste specifique pour les gardiens)
+    var critList=getCriteresFor(t,p.num);
+    var isGK=(typeof getPlayerPos==='function')&&getPlayerPos(t,p.num)==='GK';
     h+='<div class="vt-criteria">';
-    h+='<div class="vt-criteria-title">10 critères détaillés (départ à 5/10)</div>';
-    for(var ci=0;ci<CRITERES.length;ci++){
+    h+='<div class="vt-criteria-title">'+(isGK?'🥅 ':'')+'10 critères détaillés (départ à 5/10)</div>';
+    for(var ci=0;ci<critList.length;ci++){
       h+='<div class="vt-crit-row">';
-      h+='<div class="vt-crit-label">'+esc(CRITERES[ci])+'</div>';
+      h+='<div class="vt-crit-label">'+esc(critList[ci])+'</div>';
       h+='<div class="vt-crit-control">';
       h+='<button class="vt-crit-btn" id="vcm-'+safeKey+'-'+ci+'" onclick="adjustCriterion(\''+esc(key)+'\','+ci+',-0.5)" aria-label="Baisser">−</button>';
       h+='<span class="vt-crit-value empty" id="vcv-'+safeKey+'-'+ci+'">—</span>';
@@ -2478,8 +2533,15 @@ function renderVotePage(){
 }
 
 var V_RATINGS={};
-// Lot 4 : liste des 10 criteres de notation. MODIFIABLE ICI.
+// Lot 4 : liste des 10 criteres de notation pour les joueurs de champ. MODIFIABLE ICI.
 var CRITERES=['Engagement','Technique','Vision de jeu','Placement','Defense','Attaque','Passes','Finition','Mental','Fair-play'];
+// Lot GK : liste des 10 criteres de notation specifiques au gardien. MODIFIABLE ICI.
+var CRITERES_GK=['Engagement','Reflexes','Sortie aerienne','Sortie au pied','Placement','Lecture du jeu','Jeu au pied','Communication','Mental','Fair-play'];
+// Helper : renvoie la bonne liste de criteres selon le poste du joueur
+function getCriteresFor(team,player){
+  if(typeof getPlayerPos==='function'&&getPlayerPos(team,player)==='GK')return CRITERES_GK;
+  return CRITERES;
+}
 var V_OPEN_KEY=null; // cle de la carte joueur actuellement depliee (une seule a la fois)
 
 // Soumettre le vote dans Firestore
