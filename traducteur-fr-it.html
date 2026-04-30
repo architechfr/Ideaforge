@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Traducteur FR ⇄ IT</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #1a1d24;
+    --panel-2: #232730;
+    --border: #2d323d;
+    --text: #e8e9ec;
+    --muted: #8a8f99;
+    --accent: #4f8cff;
+    --fr: #4f8cff;
+    --it: #2dd4bf;
+    --error: #ff6b6b;
+    --speak: #f59e0b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+    line-height: 1.4;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; padding: 4px 2px;
+  }
+  h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: 0.5px; }
+  .sound-toggle {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 50%;
+    width: 36px; height: 36px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sound-toggle.on { color: var(--speak); border-color: var(--speak); }
+  .voice-row {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .voice-row .label {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .voice-btn {
+    background: var(--panel); color: var(--muted);
+    border: 1px solid var(--border); padding: 6px 12px;
+    border-radius: 20px; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+  .voice-btn.active {
+    background: var(--panel-2); color: var(--text);
+    border-color: var(--speak);
+  }
+  .hint {
+    font-size: 12px; color: var(--muted);
+    text-align: center; margin-bottom: 14px;
+    padding: 8px 12px; background: var(--panel);
+    border: 1px dashed var(--border); border-radius: 8px;
+  }
+  .hint b { color: var(--text); }
+  .lang-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px 12px; margin-bottom: 12px;
+  }
+  .lang { flex: 1; text-align: center; font-weight: 600; font-size: 15px; padding: 6px 0; }
+  .lang.from { color: var(--fr); }
+  .lang.to { color: var(--it); }
+  .swap-btn {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 50%;
+    width: 38px; height: 38px; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+  }
+  .panel.speaking { border-color: var(--speak); box-shadow: 0 0 0 1px var(--speak); }
+  .panel-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); font-weight: 600;
+    padding: 10px 14px 4px;
+  }
+  textarea {
+    width: 100%; min-height: 130px; background: transparent;
+    color: var(--text); border: none; padding: 4px 14px 14px;
+    font-size: 17px; font-family: inherit; resize: vertical; outline: none;
+  }
+  textarea::placeholder { color: var(--muted); }
+  .output {
+    padding: 4px 14px 14px; font-size: 17px; min-height: 130px;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
+  .output.empty { color: var(--muted); font-style: italic; }
+  .output.error { color: var(--error); }
+  .output.loading { color: var(--muted); font-style: italic; }
+  .actions { display: flex; gap: 8px; margin-top: 4px; }
+  button.primary {
+    flex: 1; background: var(--accent); color: #fff; border: none;
+    padding: 16px; border-radius: 12px; font-size: 17px;
+    font-weight: 600; cursor: pointer;
+  }
+  button.primary:active { background: #3d72d9; }
+  button.secondary {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); padding: 16px 20px;
+    border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .status {
+    text-align: center; font-size: 12px; color: var(--muted);
+    margin-top: 10px; min-height: 18px;
+  }
+  .status.speaking { color: var(--speak); font-weight: 600; }
+  .out-actions {
+    display: flex; gap: 8px; justify-content: flex-end;
+    padding: 0 10px 10px;
+  }
+  .icon-btn {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border); padding: 8px 14px;
+    border-radius: 8px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .icon-btn.speak { color: var(--speak); border-color: var(--speak); }
+  .icon-btn:active { background: var(--panel-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Traducteur FR ⇄ IT</h1>
+    <button type="button" class="sound-toggle on" id="soundToggle" title="Lecture automatique">🔊</button>
+  </header>
+
+  <div class="hint">
+    💡 Pour dicter : touche la zone de texte, puis le <b>🎤 de ton clavier</b>.
+  </div>
+
+  <div class="voice-row">
+    <span class="label">Voix :</span>
+    <button type="button" class="voice-btn active" id="voiceFemale">👩 Femme</button>
+    <button type="button" class="voice-btn" id="voiceMale">👨 Homme</button>
+  </div>
+
+  <div class="lang-bar">
+    <div class="lang from" id="labelFrom">Français</div>
+    <button type="button" class="swap-btn" id="swapBtn">⇄</button>
+    <div class="lang to" id="labelTo">Italiano</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label" id="inputLabel">Texte à traduire</div>
+    <textarea id="inputText" placeholder="Tape, colle ou dicte (micro du clavier)..." autocomplete="off" autocorrect="on" spellcheck="true"></textarea>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="primary" id="translateBtn">Traduire</button>
+    <button type="button" class="secondary" id="clearBtn">Effacer</button>
+  </div>
+
+  <div class="status" id="status">&nbsp;</div>
+
+  <div class="panel" id="outputPanel">
+    <div class="panel-label" id="outputLabel">Traduction</div>
+    <div class="output empty" id="outputText">La traduction apparaîtra ici.</div>
+    <div class="out-actions">
+      <button type="button" class="icon-btn speak" id="speakBtn">🔊 Réécouter</button>
+      <button type="button" class="icon-btn" id="copyBtn">Copier</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var direction = 'fr-it';
+  var labels = {
+    'fr-it': { from: 'Français', to: 'Italiano', input: 'Texte à traduire (FR)', output: 'Traduction (IT)', src: 'français', tgt: 'italien', tgtLang: 'it-IT' },
+    'it-fr': { from: 'Italiano', to: 'Français', input: 'Testo da tradurre (IT)', output: 'Traduzione (FR)', src: 'italien', tgt: 'français', tgtLang: 'fr-FR' }
+  };
+
+  var justTranslated = false;
+  var autoSpeak = true;
+  var preferredGender = 'female';
+  var lastTranslation = '';
+  var lastLang = 'it-IT';
+
+  var input = document.getElementById('inputText');
+  var output = document.getElementById('outputText');
+  var status = document.getElementById('status');
+  var btnTranslate = document.getElementById('translateBtn');
+  var btnSwap = document.getElementById('swapBtn');
+  var btnClear = document.getElementById('clearBtn');
+  var btnCopy = document.getElementById('copyBtn');
+  var btnSpeak = document.getElementById('speakBtn');
+  var btnSound = document.getElementById('soundToggle');
+  var btnVoiceFemale = document.getElementById('voiceFemale');
+  var btnVoiceMale = document.getElementById('voiceMale');
+  var labelFrom = document.getElementById('labelFrom');
+  var labelTo = document.getElementById('labelTo');
+  var labelInput = document.getElementById('inputLabel');
+  var labelOutput = document.getElementById('outputLabel');
+  var outputPanel = document.getElementById('outputPanel');
+
+  function refreshLabels() {
+    var l = labels[direction];
+    labelFrom.textContent = l.from;
+    labelTo.textContent = l.to;
+    labelInput.textContent = l.input;
+    labelOutput.textContent = l.output;
+    labelFrom.className = (direction === 'fr-it') ? 'lang from' : 'lang to';
+    labelTo.className = (direction === 'fr-it') ? 'lang to' : 'lang from';
+  }
+
+  function setOutput(text, cls) {
+    output.className = 'output' + (cls ? ' ' + cls : '');
+    output.textContent = text;
+  }
+
+  function setStatus(msg, cls) {
+    status.className = 'status' + (cls ? ' ' + cls : '');
+    status.innerHTML = msg || '&nbsp;';
+  }
+
+  // ---- LECTURE VOCALE ----
+  var maleNames = ['thomas','paul','henri','nicolas','daniel','pierre','jean','jacques','michel','remy','rémy','antoine','luca','cosimo','roberto','matteo','diego','carlo','marco','paolo','giorgio','alex','fred','aaron','arthur'];
+  var femaleNames = ['marie','audrey','aurelie','aurélie','hortense','julie','amelie','amélie','virginie','celine','céline','caroline','charlotte','marlene','marlène','alice','elsa','federica','carla','paola','chiara','giulia','samantha','victoria','karen','susan','allison','tessa','catherine'];
+
+  function guessGender(voice) {
+    var name = (voice.name || '').toLowerCase();
+    if (/female|femme|femal/.test(name)) return 'female';
+    if (/\bmale\b|homme|masc/.test(name)) return 'male';
+    var i;
+    for (i = 0; i < femaleNames.length; i++) {
+      if (name.indexOf(femaleNames[i]) !== -1) return 'female';
+    }
+    for (i = 0; i < maleNames.length; i++) {
+      if (name.indexOf(maleNames[i]) !== -1) return 'male';
+    }
+    return 'unknown';
+  }
+
+  function pickVoice(lang, gender) {
+    if (!window.speechSynthesis) return null;
+    var voices = window.speechSynthesis.getVoices();
+    var prefix = lang.split('-')[0].toLowerCase();
+    var matching = [];
+    var i;
+    for (i = 0; i < voices.length; i++) {
+      var vlang = (voices[i].lang || '').toLowerCase();
+      if (vlang.indexOf(prefix) === 0) matching.push(voices[i]);
+    }
+    if (matching.length === 0) return null;
+    // 1. Voix dont le genre correspond
+    for (i = 0; i < matching.length; i++) {
+      if (guessGender(matching[i]) === gender) return matching[i];
+    }
+    // 2. Sinon, première voix de la langue
+    return matching[0];
+  }
+
+  function speak(text, lang) {
+    if (!window.speechSynthesis || !text) {
+      setStatus('Lecture vocale indisponible.');
+      return;
+    }
+
+    var doSpeak = function () {
+      try {
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        // Choix de voix selon le genre préféré
+        var chosen = pickVoice(lang, preferredGender);
+        if (chosen) {
+          u.voice = chosen;
+          var actualGender = guessGender(chosen);
+          if (actualGender !== preferredGender && actualGender !== 'unknown') {
+            // Pas de voix du genre demandé : on prévient discrètement
+            console.log('Voix ' + actualGender + ' utilisée (pas de voix ' + preferredGender + ' disponible)');
+          }
+        }
+        u.onstart = function () {
+          outputPanel.className = 'panel speaking';
+          setStatus('🔊 Lecture en cours...', 'speaking');
+        };
+        u.onend = function () {
+          outputPanel.className = 'panel';
+          if (status.textContent.indexOf('Lecture') !== -1) setStatus('');
+        };
+        u.onerror = function (e) {
+          outputPanel.className = 'panel';
+          setStatus('Erreur lecture : ' + (e.error || 'inconnue'));
+        };
+        // Workaround Chrome Android : réveille le moteur avant speak
+        try { window.speechSynthesis.resume(); } catch (e) {}
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        setStatus('Lecture impossible : ' + err.message);
+      }
+    };
+
+    // Si déjà en cours, annuler puis attendre 120ms (sinon Chrome bloque)
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+      setTimeout(doSpeak, 120);
+    } else {
+      doSpeak();
+    }
+  }
+
+  function stopSpeak() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    outputPanel.className = 'panel';
+  }
+
+  // Pré-chargement des voix (certains navigateurs les chargent en async)
+  if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = function () {
+        window.speechSynthesis.getVoices();
+      };
+    }
+  }
+
+  // ---- TRADUCTION (avec fallback automatique Claude → MyMemory) ----
+  function handleSuccess(translated, source) {
+    translated = translated.replace(/^\s+|\s+$/g, '');
+    if (!translated) {
+      setOutput('Traduction vide.', 'error');
+      setStatus('');
+      return;
+    }
+    setOutput(translated, '');
+    setStatus('Traduit via ' + source + '.');
+    justTranslated = true;
+    lastTranslation = translated;
+    lastLang = labels[direction].tgtLang;
+    if (autoSpeak) speak(translated, labels[direction].tgtLang);
+  }
+
+  function translateViaClaude(text, callback) {
+    var l = labels[direction];
+    var prompt = 'Traduis le texte suivant du ' + l.src + ' vers le ' + l.tgt +
+                 '. Réponds UNIQUEMENT avec la traduction, sans préambule, ' +
+                 'sans guillemets, sans commentaire. Conserve le ton et le registre.\n\n' +
+                 'Texte:\n' + text;
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      if (!data || !data.content) throw new Error('Réponse vide');
+      var translated = '';
+      for (var i = 0; i < data.content.length; i++) {
+        if (data.content[i].type === 'text') translated += data.content[i].text;
+      }
+      callback(null, translated);
+    })
+    .catch(function (err) { callback(err); });
+  }
+
+  function translateViaMyMemory(text, callback) {
+    var pair = direction.replace('-', '|');
+    var url = 'https://api.mymemory.translated.net/get?q=' +
+              encodeURIComponent(text) + '&langpair=' + pair;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.timeout = 15000;
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (data && data.responseData && data.responseData.translatedText) {
+            callback(null, data.responseData.translatedText);
+          } else {
+            callback(new Error('Réponse MyMemory invalide'));
+          }
+        } catch (e) { callback(e); }
+      } else {
+        callback(new Error('HTTP ' + xhr.status));
+      }
+    };
+    xhr.ontimeout = function () { callback(new Error('Délai dépassé')); };
+    xhr.onerror = function () { callback(new Error('Connexion impossible')); };
+    xhr.send();
+  }
+
+  function translate() {
+    var text = input.value.replace(/^\s+|\s+$/g, '');
+    if (!text) { setStatus('Veuillez saisir un texte.'); return; }
+
+    setStatus('Traduction en cours...');
+    setOutput('...', 'loading');
+    stopSpeak();
+
+    // 1. Essai Claude
+    translateViaClaude(text, function (errC, resC) {
+      if (!errC && resC) {
+        handleSuccess(resC, 'Claude');
+        return;
+      }
+      // 2. Fallback MyMemory
+      setStatus('Bascule sur MyMemory...');
+      if (text.length > 500) {
+        setOutput('Texte trop long pour MyMemory (max 500 car.). Utilisez l\'app dans Claude pour les longs textes.', 'error');
+        setStatus('');
+        return;
+      }
+      translateViaMyMemory(text, function (errM, resM) {
+        if (!errM && resM) {
+          handleSuccess(resM, 'MyMemory');
+        } else {
+          setOutput('Échec : ' + (errM ? errM.message : 'inconnue'), 'error');
+          setStatus('');
+        }
+      });
+    });
+  }
+
+  function swap() {
+    stopSpeak();
+    direction = (direction === 'fr-it') ? 'it-fr' : 'fr-it';
+    var current = output.textContent;
+    if (output.className.indexOf('empty') === -1 &&
+        output.className.indexOf('error') === -1 &&
+        output.className.indexOf('loading') === -1 &&
+        current && current !== '...') {
+      var oldInput = input.value;
+      input.value = current;
+      setOutput(oldInput || 'La traduction apparaîtra ici.', oldInput ? '' : 'empty');
+    }
+    refreshLabels();
+    setStatus('Direction : ' + labels[direction].from + ' → ' + labels[direction].to);
+    justTranslated = false;
+  }
+
+  function clearAll() {
+    stopSpeak();
+    input.value = '';
+    setOutput('La traduction apparaîtra ici.', 'empty');
+    setStatus('');
+    justTranslated = false;
+    lastTranslation = '';
+    input.focus();
+  }
+
+  function copyResult() {
+    var txt = output.textContent;
+    if (output.className.indexOf('empty') !== -1 ||
+        output.className.indexOf('error') !== -1 ||
+        output.className.indexOf('loading') !== -1 ||
+        !txt) {
+      setStatus('Rien à copier.'); return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(
+        function () { setStatus('Copié.'); },
+        function () { fallbackCopy(txt); }
+      );
+    } else { fallbackCopy(txt); }
+  }
+
+  function fallbackCopy(txt) {
+    var ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); setStatus('Copié.'); }
+    catch (e) { setStatus('Copie impossible.'); }
+    document.body.removeChild(ta);
+  }
+
+  function toggleSound() {
+    autoSpeak = !autoSpeak;
+    if (autoSpeak) {
+      btnSound.className = 'sound-toggle on';
+      btnSound.textContent = '🔊';
+      btnSound.title = 'Lecture automatique : activée';
+      setStatus('Lecture automatique activée.');
+    } else {
+      btnSound.className = 'sound-toggle';
+      btnSound.textContent = '🔇';
+      btnSound.title = 'Lecture automatique : désactivée';
+      stopSpeak();
+      setStatus('Lecture automatique désactivée.');
+    }
+  }
+
+  function replaySpeak() {
+    if (!lastTranslation) { setStatus('Rien à lire.'); return; }
+    speak(lastTranslation, lastLang);
+  }
+
+  function setGender(g) {
+    preferredGender = g;
+    if (g === 'female') {
+      btnVoiceFemale.className = 'voice-btn active';
+      btnVoiceMale.className = 'voice-btn';
+    } else {
+      btnVoiceFemale.className = 'voice-btn';
+      btnVoiceMale.className = 'voice-btn active';
+    }
+    // Si une traduction est déjà affichée, on la relit avec la nouvelle voix
+    if (lastTranslation && autoSpeak) {
+      speak(lastTranslation, lastLang);
+    }
+  }
+
+  btnTranslate.addEventListener('click', translate);
+  btnSwap.addEventListener('click', swap);
+  btnClear.addEventListener('click', clearAll);
+  btnCopy.addEventListener('click', copyResult);
+  btnSpeak.addEventListener('click', replaySpeak);
+  btnSound.addEventListener('click', toggleSound);
+  btnVoiceFemale.addEventListener('click', function () { setGender('female'); });
+  btnVoiceMale.addEventListener('click', function () { setGender('male'); });
+
+  input.addEventListener('focus', function () {
+    if (justTranslated) {
+      input.value = '';
+      justTranslated = false;
+      setStatus('');
+    }
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault(); translate();
+    }
+  });
+
+  refreshLabels();
+})();
+</script>
+</body>
+</html>
